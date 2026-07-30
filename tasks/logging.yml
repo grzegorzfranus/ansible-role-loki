@@ -1,0 +1,31 @@
+---
+# =============================================================================
+# Ansible Role: Loki - Tasks: Logging Setup (rsyslog & logrotate)
+# =============================================================================
+# Configures optional file redirection and log rotation rules.
+# =============================================================================
+
+- name: Loki | logging | Configure rsyslog redirection
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.template:
+    src: "rsyslog/loki.conf.j2"
+    dest: "/etc/rsyslog.d/loki.conf"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+    backup: true
+  notify:
+    - Loki | handlers | Restart rsyslog
+  when: loki_configure_rsyslog | bool
+
+- name: Loki | logging | Configure logrotate configuration
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.template:
+    src: "logrotate/loki.j2"
+    dest: "/etc/logrotate.d/loki"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+    backup: true
+    validate: "logrotate -d %s"
+  when: loki_configure_logrotate | bool

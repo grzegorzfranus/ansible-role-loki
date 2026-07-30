@@ -1,0 +1,109 @@
+# =============================================================================
+# Ansible Role: Loki - Molecule Verification Playbook (default)
+# =============================================================================
+
+---
+- name: Loki | molecule | default | Verify
+  hosts: all
+  gather_facts: true
+
+  tasks:
+    - name: Verify | Check Loki binary file existence and permissions
+      ansible.builtin.stat:
+        path: "/usr/local/bin/loki"
+      register: __ver_binary_stat
+
+    - name: Verify | Assert Loki binary exists and is executable
+      ansible.builtin.assert:
+        that:
+          - __ver_binary_stat.stat.exists | bool
+          - __ver_binary_stat.stat.mode == "0755"
+        fail_msg: "Loki binary /usr/local/bin/loki is missing or has invalid permissions"
+        success_msg: "Loki binary file verified successfully"
+
+    - name: Verify | Check Loki config directory and file
+      ansible.builtin.stat:
+        path: "/etc/loki/loki-config.yml"
+      register: __ver_config_stat
+
+    - name: Verify | Assert configuration file exists with mode 0640
+      ansible.builtin.assert:
+        that:
+          - __ver_config_stat.stat.exists | bool
+          - __ver_config_stat.stat.mode == "0640"
+        fail_msg: "Configuration file /etc/loki/loki-config.yml missing or incorrect mode"
+        success_msg: "Configuration file verified successfully"
+
+    - name: Verify | Read rendered Loki YAML configuration
+      ansible.builtin.slurp:
+        src: "/etc/loki/loki-config.yml"
+      register: __ver_config_slurp
+
+    - name: Verify | Parse rendered YAML content
+      ansible.builtin.set_fact:
+        __ver_config_data: "{{ __ver_config_slurp.content | b64decode | from_yaml }}"
+
+    - name: Verify | Assert rendered YAML structure and retention defaults
+      ansible.builtin.assert:
+        that:
+          - __ver_config_data.server.http_listen_port == 3100
+          - __ver_config_data.server.grpc_listen_port == 9096
+          - __ver_config_data.limits_config.retention_period == "168h"
+          - __ver_config_data.compactor.retention_enabled | bool
+        fail_msg: "Rendered config data is missing expected defaults"
+        success_msg: "Rendered config defaults verified successfully"
+
+    - name: Verify | Check data directory ownership and permissions
+      ansible.builtin.stat:
+        path: "/var/lib/loki"
+      register: __ver_data_dir_stat
+
+    - name: Verify | Assert data directory owned by loki user/group
+      ansible.builtin.assert:
+        that:
+          - __ver_data_dir_stat.stat.exists | bool
+          - __ver_data_dir_stat.stat.pw_name == "loki"
+          - __ver_data_dir_stat.stat.gr_name == "loki"
+          - __ver_data_dir_stat.stat.uid == 10001
+          - __ver_data_dir_stat.stat.gid == 10001
+        fail_msg: "Data directory /var/lib/loki is not owned by loki:loki (10001:10001)"
+        success_msg: "Data directory ownership verified successfully"
+
+    - name: Verify | Check Docker Compose configuration file
+      ansible.builtin.stat:
+        path: "/etc/loki/compose/docker-compose.yml"
+      register: __ver_compose_stat
+
+    - name: Verify | Assert Docker Compose file exists with mode 0640
+      ansible.builtin.assert:
+        that:
+          - __ver_compose_stat.stat.exists | bool
+          - __ver_compose_stat.stat.mode == "0640"
+        fail_msg: "Docker Compose file /etc/loki/compose/docker-compose.yml missing or incorrect mode"
+        success_msg: "Docker Compose file verified successfully"
+
+    - name: Verify | Read rendered Docker Compose file
+      ansible.builtin.slurp:
+        src: "/etc/loki/compose/docker-compose.yml"
+      register: __ver_compose_slurp
+
+    - name: Verify | Parse rendered Compose YAML content
+      ansible.builtin.set_fact:
+        __ver_compose_data: "{{ __ver_compose_slurp.content | b64decode | from_yaml }}"
+
+    - name: Verify | Assert gRPC port is NOT published in compose ports
+      ansible.builtin.assert:
+        that:
+          - "__ver_compose_data.services.loki.ports | select('search', '9096') | list | length == 0"
+          - "__ver_compose_data.services.loki.ports | select('search', '3100') | list | length > 0"
+        fail_msg: "Compose stack publishes gRPC port 9096 or missing HTTP port 3100"
+        success_msg: "Compose port publication verified (gRPC port 9096 is not published)"
+
+    - name: Verify | Assert read_only, tmpfs, and mem_limit configuration in compose file
+      ansible.builtin.assert:
+        that:
+          - __ver_compose_data.services.loki.read_only | bool
+          - "'/tmp' in __ver_compose_data.services.loki.tmpfs"
+          - __ver_compose_data.services.loki.mem_limit == "1g"
+        fail_msg: "Compose file missing read_only, tmpfs, or memory limit"
+        success_msg: "Compose hardening, tmpfs, and memory limits verified successfully"

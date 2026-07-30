@@ -1,0 +1,38 @@
+# =============================================================================
+# Ansible Role: Loki - Molecule Converge Playbook (config-override)
+# =============================================================================
+
+---
+- name: Loki | molecule | config-override | Converge
+  hosts: all
+  gather_facts: true
+
+  pre_tasks:
+    - name: Loki | molecule | converge | Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 600
+      changed_when: false
+      when: ansible_facts['os_family'] == "Debian"
+
+    - name: Loki | molecule | converge | Update dnf cache
+      ansible.builtin.dnf:
+        update_cache: true
+      changed_when: false
+      when: ansible_facts['os_family'] == "RedHat"
+
+  roles:
+    - role: ../../..
+      vars:
+        loki_become: false
+        loki_deployment_method: "binary"
+        loki_manage_service_restart: false
+        loki_http_port: 3101
+        loki_retention_period: "72h"
+        loki_ingestion_rate_mb: 8
+        loki_ingestion_burst_size_mb: 16
+        loki_extra_config:
+          table_manager:
+            retention_deletes_enabled: true
+          limits_config:
+            max_query_length: "720h"

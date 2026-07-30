@@ -1,0 +1,45 @@
+# =============================================================================
+# Ansible Role: Loki - Molecule Converge Playbook (default)
+# =============================================================================
+# Strategy: Runs live binary deployment mode first (with loki_become: false for
+# container environment), then executes a Docker-mode templating pass to render
+# and verify docker-compose.yml security hardening without requiring Docker daemon.
+# =============================================================================
+
+---
+- name: Loki | molecule | default | Converge (Binary Live Play)
+  hosts: all
+  gather_facts: true
+
+  pre_tasks:
+    - name: Loki | molecule | converge | Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 600
+      changed_when: false
+      when: ansible_facts['os_family'] == "Debian"
+
+    - name: Loki | molecule | converge | Update dnf cache
+      ansible.builtin.dnf:
+        update_cache: true
+      changed_when: false
+      when: ansible_facts['os_family'] == "RedHat"
+
+  roles:
+    - role: ../../..
+      vars:
+        loki_become: false
+        loki_deployment_method: "binary"
+        loki_manage_service_restart: false
+
+- name: Loki | molecule | default | Converge (Docker Template Pass)
+  hosts: all
+  gather_facts: true
+
+  roles:
+    - role: ../../..
+      vars:
+        loki_become: false
+        loki_deployment_method: "docker"
+        loki_manage_service_restart: false
+        loki_compose_read_only: true

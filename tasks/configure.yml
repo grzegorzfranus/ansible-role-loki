@@ -1,0 +1,19 @@
+---
+# =============================================================================
+# Ansible Role: Loki - Tasks: Configuration Rendering
+# =============================================================================
+# Renders Loki main YAML configuration from Jinja2 template.
+# =============================================================================
+
+- name: Loki | configure | Render Loki configuration file
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.template:
+    src: "loki/loki-config.yml.j2"
+    dest: "{{ loki_config_dir }}/loki-config.yml"
+    owner: "root"
+    group: "{{ loki_group }}"
+    mode: "0640"
+    backup: true
+  notify:
+    - Loki | handlers | Restart Loki service
+    - Loki | handlers | Restart Loki compose stack

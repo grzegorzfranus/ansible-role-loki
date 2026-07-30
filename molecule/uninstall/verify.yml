@@ -1,0 +1,38 @@
+# =============================================================================
+# Ansible Role: Loki - Molecule Verification Playbook (uninstall - Docker mode)
+# =============================================================================
+
+---
+- name: Loki | molecule | uninstall | Verify
+  hosts: all
+  gather_facts: true
+
+  tasks:
+    - name: Verify | Check Loki configuration directory absent
+      ansible.builtin.stat:
+        path: "/etc/loki"
+      register: __ver_conf
+
+    - name: Verify | Check Loki data directory absent
+      ansible.builtin.stat:
+        path: "/var/lib/loki"
+      register: __ver_data
+
+    - name: Verify | Check unmanaged logrotate file still exists
+      ansible.builtin.stat:
+        path: "/etc/logrotate.d/loki"
+      register: __ver_logrotate
+
+    - name: Verify | Assert Loki artifacts purged and unmanaged logrotate preserved
+      ansible.builtin.assert:
+        that:
+          - not __ver_conf.stat.exists | bool
+          - not __ver_data.stat.exists | bool
+          - __ver_logrotate.stat.exists | bool
+        fail_msg: "Loki docker artifacts not purged or unmanaged logrotate file was improperly removed"
+        success_msg: "Loki docker artifacts purged and unmanaged logrotate preserved successfully"
+
+    - name: Verify | Remove unmanaged dummy logrotate file
+      ansible.builtin.file:
+        path: "/etc/logrotate.d/loki"
+        state: absent

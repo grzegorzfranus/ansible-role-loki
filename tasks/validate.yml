@@ -1,0 +1,47 @@
+---
+# =============================================================================
+# Ansible Role: Loki - Tasks: Pre-execution Validation
+# =============================================================================
+# Performs host distribution, memory, and disk partition space verification
+# before installing or configuring Grafana Loki.
+# =============================================================================
+
+- name: Loki | validate | Check distribution support
+  ansible.builtin.assert:
+    that:
+      - >-
+        (ansible_facts['distribution'] == 'Ubuntu' and
+         ansible_facts['distribution_version'] in ['22.04', '24.04', '26.04']) or
+        (ansible_facts['distribution'] == 'Debian' and
+         ansible_facts['distribution_major_version'] in ['11', '12', '13']) or
+        (ansible_facts['os_family'] == 'RedHat' and
+         ansible_facts['distribution_major_version'] == '9')
+    fail_msg: "Unsupported OS: {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}. Supported: Ubuntu 22.04/24.04/26.04, Debian 11/12/13, EL9"
+    success_msg: "Distribution supported: {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}"
+
+- name: Loki | validate | Check total system memory availability
+  ansible.builtin.assert:
+    that:
+      - (ansible_facts['memtotal_mb'] | default(2048)) >= (loki_min_memory_mb | int)
+    fail_msg: "Insufficient RAM: {{ ansible_facts['memtotal_mb'] | default('unknown') }} MB available, {{ loki_min_memory_mb }} MB required."
+    success_msg: "System memory check passed: {{ ansible_facts['memtotal_mb'] | default(2048) }} MB available"
+
+- name: Loki | validate | Check available disk space for Loki data directory
+  ansible.builtin.assert:
+    that:
+      - (__loki_avail_disk_mb | int) >= (loki_min_free_disk_mb | int)
+    fail_msg: "Insufficient free disk space for data directory '{{ loki_data_dir }}': {{ __loki_avail_disk_mb }} MB available, {{ loki_min_free_disk_mb }} MB required."
+    success_msg: "Disk space check passed for '{{ loki_data_dir }}': {{ __loki_avail_disk_mb }} MB available"
+  vars:
+    __loki_mounts: "{{ ansible_facts['mounts'] | default([]) }}"
+    __loki_specific_mount: "{{ __loki_mounts | selectattr('mount', 'equalto', loki_data_dir) | list | first | default(none) }}"
+    __loki_root_mount: "{{ __loki_mounts | selectattr('mount', 'equalto', '/') | list | first | default({'size_available': 21474836480}) }}"
+    __loki_data_mount: "{{ __loki_specific_mount if __loki_specific_mount is not none else __loki_root_mount }}"
+    __loki_avail_disk_mb: "{{ (__loki_data_mount.size_available | int) / 1024 / 1024 }}"
+
+- name: Loki | validate | Display validation status summary
+  ansible.builtin.debug:
+    msg:
+      - "Validation summary: {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }} ({{ ansible_facts['architecture'] }})"
+      - "RAM: {{ ansible_facts['memtotal_mb'] | default(2048) }} MB | Deployment Mode: {{ loki_deployment_method }}"
+    verbosity: 1

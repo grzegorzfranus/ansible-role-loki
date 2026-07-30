@@ -1,0 +1,51 @@
+---
+# =============================================================================
+# Ansible Role: Loki - Tasks: System Prerequisites
+# =============================================================================
+# Installs baseline system utilities and packages required for Loki deployment.
+# =============================================================================
+
+- name: Loki | prerequisites | Install required base system packages (Debian/Ubuntu)
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - unzip
+      - tar
+    state: present
+    update_cache: true
+  register: __loki_debian_prereq_install
+  retries: 3
+  delay: 5
+  until: __loki_debian_prereq_install is succeeded
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Loki | prerequisites | Install required base system packages (EL)
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.dnf:
+    name:
+      - ca-certificates
+      - unzip
+      - tar
+    state: present
+  register: __loki_el_prereq_install
+  retries: 3
+  delay: 5
+  until: __loki_el_prereq_install is succeeded
+  when: ansible_facts['os_family'] == 'RedHat'
+
+- name: Loki | prerequisites | Gather installed packages (EL)
+  ansible.builtin.package_facts:
+    manager: auto
+  when: ansible_facts['os_family'] == 'RedHat'
+
+- name: Loki | prerequisites | Ensure curl present when neither curl nor curl-minimal installed (EL)
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.dnf:
+    name: curl
+    state: present
+  when:
+    - ansible_facts['os_family'] == 'RedHat'
+    - not ('curl' in ansible_facts.packages)
+    - not ('curl-minimal' in ansible_facts.packages)

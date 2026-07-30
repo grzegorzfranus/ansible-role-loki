@@ -1,0 +1,19 @@
+---
+# =============================================================================
+# Ansible Role: Loki - Tasks: Systemd Service Management
+# =============================================================================
+# Renders systemd service unit and manages systemd reload for binary mode.
+# =============================================================================
+
+- name: Loki | systemd | Render systemd service unit
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.template:
+    src: "systemd/loki.service.j2"
+    dest: "/etc/systemd/system/{{ __loki_service_name }}.service"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+    backup: true
+  notify:
+    - Loki | handlers | Reload systemd
+    - Loki | handlers | Restart Loki service

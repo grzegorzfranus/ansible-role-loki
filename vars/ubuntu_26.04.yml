@@ -1,0 +1,10 @@
+---
+# =============================================================================
+# Ansible Role: Loki - Internal Variables (Ubuntu 26.04 Resolute)
+# =============================================================================
+# Internal constants and computed values.
+# These are NOT user-overridable. All use double-underscore prefix.
+# =============================================================================
+
+__loki_os_log_user_default: "root"
+__loki_os_log_group_default: "syslog"

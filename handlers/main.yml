@@ -1,0 +1,38 @@
+---
+# =============================================================================
+# Ansible Role: Loki - Handlers
+# =============================================================================
+
+- name: Loki | handlers | Reload systemd
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.systemd:
+    daemon_reload: true
+  when: loki_manage_service_restart | bool
+
+- name: Loki | handlers | Restart Loki service
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.systemd:
+    name: "{{ __loki_service_name }}"
+    state: restarted
+  when:
+    - loki_deployment_method | lower == 'binary'
+    - loki_service_enabled | bool
+    - loki_manage_service_restart | bool
+
+- name: Loki | handlers | Restart Loki compose stack
+  become: "{{ loki_become | bool }}"
+  community.docker.docker_compose_v2:
+    project_src: "{{ loki_compose_dir }}"
+    state: restarted
+  when:
+    - loki_deployment_method | lower == 'docker'
+    - loki_service_enabled | bool
+    - loki_manage_service_restart | bool
+
+- name: Loki | handlers | Restart rsyslog
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.systemd:
+    name: "rsyslog"
+    state: restarted
+  failed_when: false
+  when: loki_manage_service_restart | bool

@@ -1,0 +1,29 @@
+# =============================================================================
+# Ansible Role: Loki - Molecule Verification Playbook (config-override)
+# =============================================================================
+
+---
+- name: Loki | molecule | config-override | Verify
+  hosts: all
+  gather_facts: true
+
+  tasks:
+    - name: Verify | Read rendered Loki YAML configuration
+      ansible.builtin.slurp:
+        src: "/etc/loki/loki-config.yml"
+      register: __ver_config_slurp
+
+    - name: Verify | Parse rendered YAML content
+      ansible.builtin.set_fact:
+        __ver_config_data: "{{ __ver_config_slurp.content | b64decode | from_yaml }}"
+
+    - name: Verify | Assert overridden settings and deep-merged extra config in loki-config.yml
+      ansible.builtin.assert:
+        that:
+          - __ver_config_data.server.http_listen_port == 3101
+          - __ver_config_data.limits_config.retention_period == "72h"
+          - __ver_config_data.limits_config.ingestion_rate_mb == 8
+          - __ver_config_data.limits_config.max_query_length == "720h"
+          - __ver_config_data.table_manager.retention_deletes_enabled | bool
+        fail_msg: "Overridden configuration parameters or loki_extra_config deep-merge failed"
+        success_msg: "Overridden configuration parameters and loki_extra_config deep-merge verified in loki-config.yml"

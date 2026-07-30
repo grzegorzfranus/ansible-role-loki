@@ -1,0 +1,35 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{{ ansible_managed | comment }}
+[Unit]
+Description=Grafana Loki Log Aggregation System
+Documentation=https://grafana.com/docs/loki/latest/
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User={{ loki_user }}
+Group={{ loki_group }}
+ExecStart={{ loki_install_dir }}/loki -config.file={{ loki_config_dir }}/loki-config.yml -target=all
+Restart=always
+RestartSec=5s
+LimitNOFILE=65536
+
+{% if loki_systemd_hardening_enabled | bool %}
+# Sandboxing Security Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths={{ loki_data_dir }}
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=
+{% endif %}
+{% for option in loki_systemd_extra_options %}
+{{ option }}
+{% endfor %}
+
+[Install]
+WantedBy=multi-user.target

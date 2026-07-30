@@ -1,0 +1,17 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{{ ansible_managed | comment }}
+/var/log/loki/*.log {
+    {{ loki_logrotate_options.frequency | default('daily') }}
+    rotate {{ loki_logrotate_options.count | default(7) }}
+    size {{ loki_logrotate_options.rotate_size | default('100M') }}
+    missingok
+    notifempty
+{% if loki_logrotate_options.compress | default(true) | bool %}
+    compress
+    delaycompress
+{% endif %}
+    sharedscripts
+    postrotate
+        /usr/bin/systemctl kill -s HUP rsyslog.service >/dev/null 2>&1 || true
+    endscript
+}

@@ -1,0 +1,32 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{{ ansible_managed | comment }}
+services:
+  loki:
+    image: "{{ loki_image }}:{{ loki_image_tag }}"
+    container_name: "loki"
+    user: "{{ loki_uid }}:{{ loki_gid }}"
+    restart: "{{ loki_compose_restart_policy }}"
+    read_only: {{ loki_compose_read_only | bool }}
+{% if loki_compose_read_only | bool %}
+    # Writable tmpfs for WAL staging and compactor temporary files
+    tmpfs:
+      - "/tmp"
+{% endif %}
+    security_opt:
+      - "no-new-privileges:true"
+    command:
+      - "-config.file={{ loki_config_dir }}/loki-config.yml"
+      - "-target=all"
+    # HTTP API published port. gRPC port (9096) is used only for internal
+    # inter-component communication in single-binary mode and is not published.
+    ports:
+      - "{{ __loki_effective_bind_address | default(loki_bind_address) }}:{{ loki_http_port }}:{{ loki_http_port }}"
+    volumes:
+      - "{{ loki_config_dir }}:{{ loki_config_dir }}:ro"
+      - "{{ loki_data_dir }}:{{ loki_data_dir }}"
+    logging:
+      driver: "{{ loki_compose_log_driver }}"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    mem_limit: "{{ loki_compose_memory_limit }}"

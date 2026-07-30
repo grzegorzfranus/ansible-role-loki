@@ -1,0 +1,44 @@
+---
+# =============================================================================
+# Ansible Role: Loki - Tasks: Directory Creation
+# =============================================================================
+# Manages system directory structures with strict file permission triads.
+# =============================================================================
+
+- name: Loki | directories | Create data directory
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.file:
+    path: "{{ loki_data_dir }}"
+    state: directory
+    owner: "{{ loki_user }}"
+    group: "{{ loki_group }}"
+    mode: "0750"
+
+- name: Loki | directories | Create compactor working directory
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.file:
+    path: "{{ loki_compactor_working_dir }}"
+    state: directory
+    owner: "{{ loki_user }}"
+    group: "{{ loki_group }}"
+    mode: "0750"
+  when: loki_compactor_enabled | bool
+
+- name: Loki | directories | Create configuration directory
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.file:
+    path: "{{ loki_config_dir }}"
+    state: directory
+    owner: "root"
+    group: "{{ loki_group }}"
+    mode: "0755"
+
+- name: Loki | directories | Create compose directory
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.file:
+    path: "{{ loki_compose_dir }}"
+    state: directory
+    owner: "root"
+    group: "root"
+    mode: "0755"
+  when: loki_deployment_method | lower == 'docker'

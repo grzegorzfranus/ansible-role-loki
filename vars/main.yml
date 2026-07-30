@@ -1,0 +1,26 @@
+---
+# =============================================================================
+# Ansible Role: Loki - Internal Variables
+# =============================================================================
+# Internal constants and computed values.
+# These are NOT user-overridable. All use double-underscore prefix.
+# =============================================================================
+
+# System service name for native binary deployment mode
+__loki_service_name: "loki"
+
+# Architecture mapping for Loki binary releases
+__loki_arch_map:
+  x86_64: "amd64"
+  aarch64: "arm64"
+  armv7l: "armv7"
+  armv6l: "armv6"
+
+__loki_arch: "{{ __loki_arch_map[ansible_facts.architecture] | default('amd64') }}"
+
+# Binary download URL pattern
+__loki_binary_url: "https://github.com/grafana/loki/releases/download/v{{ loki_version }}/loki-linux-{{ __loki_arch }}.zip"
+
+# OS-specific log user/group defaults
+__loki_os_log_user_default: "root"
+__loki_os_log_group_default: "root"

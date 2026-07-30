@@ -1,0 +1,38 @@
+---
+# =============================================================================
+# Ansible Role: Loki - Tasks: Service Management
+# =============================================================================
+# Symmetrically manages running service state for both binary (systemd) and
+# docker (Docker Compose) deployment modes, and probes HTTP readiness.
+# =============================================================================
+
+- name: Loki | service | Manage Loki systemd service state
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.systemd:
+    name: "{{ __loki_service_name }}"
+    state: "{{ (loki_service_enabled | bool) | ternary('started', 'stopped') }}"
+    enabled: "{{ loki_service_enabled | bool }}"
+  when:
+    - loki_deployment_method | lower == 'binary'
+    - loki_manage_service_restart | bool
+
+- name: Loki | service | Manage Docker Compose stack service state
+  become: "{{ loki_become | bool }}"
+  community.docker.docker_compose_v2:
+    project_src: "{{ loki_compose_dir }}"
+    state: "{{ (loki_service_enabled | bool) | ternary('present', 'stopped') }}"
+  when:
+    - loki_deployment_method | lower == 'docker'
+    - loki_manage_service_restart | bool
+
+- name: Loki | service | Probe Loki HTTP /ready health endpoint
+  ansible.builtin.uri:
+    url: "http://{{ __loki_effective_bind_address | default(loki_bind_address) }}:{{ loki_http_port }}/ready"
+    status_code: 200
+  register: __loki_ready_probe
+  until: __loki_ready_probe.status == 200
+  retries: 12
+  delay: 5
+  when:
+    - loki_service_enabled | bool
+    - loki_manage_service_restart | bool
