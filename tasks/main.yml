@@ -1,0 +1,113 @@
+---
+# =============================================================================
+# Ansible Role: Loki - Tasks: Main Orchestration
+# =============================================================================
+# Flow: include_vars → resolve_bind → assert → validate → remove → prerequisites → user → directories → install → configure → compose → systemd → logging → service
+# =============================================================================
+
+- name: Loki | main | Gather OS specific variables
+  ansible.builtin.include_vars: "{{ lookup('first_found', params) }}"
+  vars:
+    params:
+      files:
+        - "{{ ansible_facts['distribution'] | lower }}_{{ ansible_facts['distribution_version'] | lower }}.yml"
+        - "{{ ansible_facts['distribution'] | lower }}_{{ ansible_facts['distribution_major_version'] | lower }}.yml"
+        - "{{ ansible_facts['distribution'] | lower }}.yml"
+        - "{{ ansible_facts['os_family'] | lower }}_{{ ansible_facts['distribution_version'] | lower }}.yml"
+        - "{{ ansible_facts['os_family'] | lower }}_{{ ansible_facts['distribution_major_version'].split('.')[0] }}.yml"
+        - "{{ ansible_facts['os_family'] | lower }}.yml"
+        - "main.yml"
+      paths:
+        - "{{ role_path }}/vars"
+  tags:
+    - always
+
+- name: Loki | main | Resolve effective bind address from network interface when specified
+  ansible.builtin.set_fact:
+    __loki_effective_bind_address: >-
+      {{
+        ansible_facts[loki_bind_interface]['ipv4']['address']
+        if (loki_bind_interface | default('') | length > 0 and
+            loki_bind_interface in ansible_facts and
+            'ipv4' in ansible_facts[loki_bind_interface])
+        else loki_bind_address
+      }}
+  tags:
+    - always
+
+- name: Loki | main | Execute variable assertions
+  ansible.builtin.include_tasks: assert.yml
+  tags:
+    - loki_setup
+
+- name: Loki | main | Execute system preflight validation
+  ansible.builtin.include_tasks: validate.yml
+  when:
+    - loki_state | lower == 'present'
+    - loki_validate_system | bool
+  tags:
+    - loki_validate
+
+- name: Loki | main | Execute uninstallation tasks
+  ansible.builtin.include_tasks: remove.yml
+  when: loki_state | lower == 'absent'
+  tags:
+    - loki_remove
+
+- name: Loki | main | Install prerequisites
+  ansible.builtin.include_tasks: prerequisites.yml
+  when: loki_state | lower == 'present'
+  tags:
+    - loki_setup
+
+- name: Loki | main | Create system user and group
+  ansible.builtin.include_tasks: user.yml
+  when: loki_state | lower == 'present'
+  tags:
+    - loki_setup
+
+- name: Loki | main | Create directory layout
+  ansible.builtin.include_tasks: directories.yml
+  when: loki_state | lower == 'present'
+  tags:
+    - loki_setup
+
+- name: Loki | main | Execute installation dispatcher
+  ansible.builtin.include_tasks: install.yml
+  when: loki_state | lower == 'present'
+  tags:
+    - loki_install
+
+- name: Loki | main | Render configuration files
+  ansible.builtin.include_tasks: configure.yml
+  when: loki_state | lower == 'present'
+  tags:
+    - loki_configure
+
+- name: Loki | main | Manage Docker Compose stack
+  ansible.builtin.include_tasks: compose.yml
+  when:
+    - loki_state | lower == 'present'
+    - loki_deployment_method | lower == 'docker'
+  tags:
+    - loki_configure
+
+- name: Loki | main | Manage systemd service unit
+  ansible.builtin.include_tasks: systemd.yml
+  when:
+    - loki_state | lower == 'present'
+    - loki_deployment_method | lower == 'binary'
+  tags:
+    - loki_configure
+
+- name: Loki | main | Configure logging (rsyslog and logrotate)
+  ansible.builtin.include_tasks: logging.yml
+  when: loki_state | lower == 'present'
+  tags:
+    - loki_configure
+
+- name: Loki | main | Manage service state
+  ansible.builtin.include_tasks: service.yml
+  when: loki_state | lower == 'present'
+  tags:
+    - loki_service

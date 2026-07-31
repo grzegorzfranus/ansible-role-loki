@@ -1,0 +1,40 @@
+---
+galaxy_info:
+  role_name: loki
+  author: Grzegorz Franus
+  namespace: grzegorzfranus
+  description: >-
+    Ansible role for deploying Grafana Loki log aggregation system (Docker Compose or native binary mode) with secure defaults.
+  license: Apache-2.0
+  company: EWARE
+  min_ansible_version: "2.15"
+
+  platforms:
+    - name: Debian
+      versions:
+        - "bullseye"
+        - "bookworm"
+        - "trixie"
+    - name: Ubuntu
+      versions:
+        - "jammy"
+        - "noble"
+        - "resolute"
+    - name: EL
+      versions:
+        - "9"
+
+  galaxy_tags:
+    - loki
+    - grafana
+    - logging
+    - docker
+    - systemd
+
+collections:
+  - community.docker
+  - ansible.posix
+
+# Role dependencies (grzegorzfranus.docker) are included dynamically via tasks/install_docker.yml
+# when loki_deployment_method | lower == 'docker' to allow standalone playbook syntax checking.
+dependencies: []

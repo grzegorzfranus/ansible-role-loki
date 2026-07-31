@@ -1,0 +1,11 @@
+---
+# ==============================================================================
+# Ansible Variable Validation Waiver Configuration
+# ==============================================================================
+# File: .ansible-vars-validate.yml
+# Description: Defines explicit waivers for variable consistency validation in CI.
+# ==============================================================================
+
+ignore_dead:
+  - name: "loki_filesystem_retention_acknowledged"
+    reason: "Assert-only safety guard checked in tasks/assert.yml when retention exceeds filesystem-backend guidance."

@@ -1,0 +1,14 @@
+---
+# =============================================================================
+# Ansible Role: Loki - Tasks: Installation Dispatcher
+# =============================================================================
+# Routes installation steps based on selected loki_deployment_method.
+# =============================================================================
+
+- name: Loki | install | Include Docker image pull tasks
+  ansible.builtin.include_tasks: install_docker.yml
+  when: loki_deployment_method | lower == 'docker'
+
+- name: Loki | install | Include native binary download tasks
+  ansible.builtin.include_tasks: install_binary.yml
+  when: loki_deployment_method | lower == 'binary'

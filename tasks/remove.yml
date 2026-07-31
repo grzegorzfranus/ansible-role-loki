@@ -1,0 +1,69 @@
+---
+# =============================================================================
+# Ansible Role: Loki - Tasks: Uninstallation
+# =============================================================================
+# Idempotently stops and removes Loki service, compose stack, configurations,
+# and optionally purges data directory if loki_remove_data is true.
+# =============================================================================
+
+- name: Loki | remove | Stop and remove Docker Compose stack
+  become: "{{ loki_become | bool }}"
+  community.docker.docker_compose_v2:
+    project_src: "{{ loki_compose_dir }}"
+    state: absent
+  failed_when: false
+  when: loki_deployment_method | lower == 'docker'
+
+- name: Loki | remove | Stop and disable systemd service
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.systemd:
+    name: "{{ __loki_service_name }}"
+    state: stopped
+    enabled: false
+  failed_when: false
+  when: loki_deployment_method | lower == 'binary'
+
+- name: Loki | remove | Remove systemd service unit file
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.file:
+    path: "/etc/systemd/system/{{ __loki_service_name }}.service"
+    state: absent
+  notify:
+    - Loki | handlers | Reload systemd
+  when: loki_deployment_method | lower == 'binary'
+
+- name: Loki | remove | Remove binary file
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.file:
+    path: "{{ loki_install_dir }}/loki"
+    state: absent
+  when: loki_deployment_method | lower == 'binary'
+
+- name: Loki | remove | Remove configuration directory
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.file:
+    path: "{{ loki_config_dir }}"
+    state: absent
+
+- name: Loki | remove | Remove rsyslog configuration
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.file:
+    path: "/etc/rsyslog.d/loki.conf"
+    state: absent
+  notify:
+    - Loki | handlers | Restart rsyslog
+  when: loki_configure_rsyslog | bool
+
+- name: Loki | remove | Remove logrotate configuration
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.file:
+    path: "/etc/logrotate.d/loki"
+    state: absent
+  when: loki_configure_logrotate | bool
+
+- name: Loki | remove | Purge Loki data directory
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.file:
+    path: "{{ loki_data_dir }}"
+    state: absent
+  when: loki_remove_data | bool

@@ -1,0 +1,53 @@
+# =============================================================================
+# Ansible Role: Loki - Molecule Converge Playbook (uninstall)
+# =============================================================================
+
+---
+- name: Loki | molecule | uninstall | Install Play
+  hosts: all
+  gather_facts: true
+
+  pre_tasks:
+    - name: Loki | molecule | converge | Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 600
+      changed_when: false
+      when: ansible_facts['os_family'] == "Debian"
+
+    - name: Loki | molecule | converge | Update dnf cache
+      ansible.builtin.dnf:
+        update_cache: true
+      changed_when: false
+      when: ansible_facts['os_family'] == "RedHat"
+
+    - name: Loki | molecule | uninstall | Create unmanaged dummy logrotate file
+      ansible.builtin.copy:
+        dest: "/etc/logrotate.d/loki"
+        content: "# Unmanaged dummy logrotate file"
+        owner: "root"
+        group: "root"
+        mode: "0644"
+      changed_when: false
+
+  roles:
+    - role: ../../..
+      vars:
+        loki_become: false
+        loki_deployment_method: "binary"
+        loki_configure_logrotate: false
+        loki_manage_service_restart: false
+
+- name: Loki | molecule | uninstall | Uninstall Play
+  hosts: all
+  gather_facts: true
+
+  roles:
+    - role: ../../..
+      vars:
+        loki_become: false
+        loki_state: "absent"
+        loki_deployment_method: "binary"
+        loki_configure_logrotate: false
+        loki_remove_data: true
+        loki_manage_service_restart: false

@@ -1,0 +1,18 @@
+---
+# =============================================================================
+# Ansible Role: Loki - Tasks: Docker Compose Management
+# =============================================================================
+# Renders docker-compose.yml configuration file for Docker deployment mode.
+# =============================================================================
+
+- name: Loki | compose | Render Docker Compose file
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.template:
+    src: "compose/docker-compose.yml.j2"
+    dest: "{{ loki_compose_dir }}/docker-compose.yml"
+    owner: "root"
+    group: "root"
+    mode: "0640"
+    backup: true
+  notify:
+    - Loki | handlers | Restart Loki compose stack

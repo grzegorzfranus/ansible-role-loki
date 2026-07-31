@@ -1,0 +1,61 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{{ ansible_managed | comment }}
+{% set __base_config = {
+  'auth_enabled': loki_auth_enabled | bool,
+  'server': {
+    'http_listen_address': __loki_effective_bind_address | default(loki_bind_address),
+    'http_listen_port': loki_http_port | int,
+    'grpc_listen_port': loki_grpc_port | int,
+    'log_level': loki_log_level
+  } | combine(loki_server_config | default({}), recursive=True),
+  'common': {
+    'path_prefix': loki_data_dir,
+    'storage': {
+      'filesystem': {
+        'chunks_directory': loki_data_dir ~ '/chunks',
+        'rules_directory': loki_data_dir ~ '/rules'
+      }
+    },
+    'replication_factor': 1,
+    'ring': {
+      'kvstore': {
+        'store': 'inmemory'
+      }
+    }
+  },
+  'schema_config': {
+    'configs': [
+      {
+        'from': loki_schema_from,
+        'store': 'tsdb',
+        'object_store': loki_storage_backend,
+        'schema': loki_schema_version,
+        'index': {
+          'prefix': 'index_',
+          'period': loki_schema_index_period
+        }
+      }
+    ]
+  },
+  'limits_config': {
+    'retention_period': loki_retention_period,
+    'ingestion_rate_mb': loki_ingestion_rate_mb | int,
+    'ingestion_burst_size_mb': loki_ingestion_burst_size_mb | int,
+    'max_streams_per_user': loki_max_streams_per_user | int,
+    'max_global_streams_per_user': loki_max_global_streams_per_user | int,
+    'max_query_series': loki_max_query_series | int,
+    'chunk_target_size': loki_chunk_target_size | int,
+    'chunk_idle_period': loki_chunk_idle_period
+  },
+  'compactor': {
+    'working_directory': loki_compactor_working_dir,
+    'compactor_ring': {
+      'kvstore': {
+        'store': 'inmemory'
+      }
+    },
+    'retention_enabled': loki_compactor_enabled | bool,
+    'delete_request_store': loki_delete_request_store
+  }
+} %}
+{{ __base_config | combine(loki_extra_config | default({}), recursive=True) | to_nice_yaml(indent=2) }}

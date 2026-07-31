@@ -1,0 +1,64 @@
+---
+# =============================================================================
+# Ansible Role: Loki - Tasks: Native Binary Download & Installation
+# =============================================================================
+# Downloads static Loki release zip, extracts binary to install_dir, and sets
+# explicit executable permissions. Uses stat guard + checksum + creates guard.
+# =============================================================================
+
+- name: Loki | install_binary | Check if Loki binary is installed
+  ansible.builtin.stat:
+    path: "{{ loki_install_dir }}/loki"
+  register: __loki_binary_stat
+
+- name: Loki | install_binary | Create temporary download directory
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.file:
+    path: "/tmp/loki-{{ loki_version }}"
+    state: directory
+    owner: "root"
+    group: "root"
+    mode: "0755"
+  when: not __loki_binary_stat.stat.exists | bool
+
+- name: Loki | install_binary | Download Loki zip archive
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.get_url:
+    url: "{{ __loki_binary_url }}"
+    dest: "/tmp/loki-{{ loki_version }}/loki-linux-{{ __loki_arch }}.zip"
+    checksum: "{{ loki_binary_checksum if (loki_binary_checksum | default('') | length > 0) else ('sha256:https://github.com/grafana/loki/releases/download/v' ~ loki_version ~ '/SHA256SUMS') }}"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  register: __loki_download
+  retries: 3
+  delay: 5
+  until: __loki_download is succeeded
+  when: not __loki_binary_stat.stat.exists | bool
+
+- name: Loki | install_binary | Unarchive Loki release package
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.unarchive:
+    src: "/tmp/loki-{{ loki_version }}/loki-linux-{{ __loki_arch }}.zip"
+    dest: "/tmp/loki-{{ loki_version }}"
+    remote_src: true
+    creates: "/tmp/loki-{{ loki_version }}/loki-linux-{{ __loki_arch }}"
+  when: not __loki_binary_stat.stat.exists | bool
+
+- name: Loki | install_binary | Copy Loki binary to target installation directory
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.copy:
+    src: "/tmp/loki-{{ loki_version }}/loki-linux-{{ __loki_arch }}"
+    dest: "{{ loki_install_dir }}/loki"
+    owner: "root"
+    group: "root"
+    mode: "0755"
+    remote_src: true
+  when: not __loki_binary_stat.stat.exists | bool
+
+- name: Loki | install_binary | Clean up temporary download directory
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.file:
+    path: "/tmp/loki-{{ loki_version }}"
+    state: absent
+  when: not __loki_binary_stat.stat.exists | bool

@@ -1,0 +1,296 @@
+---
+# =============================================================================
+# Ansible Role: Loki - Default Variables
+# =============================================================================
+# Purpose: Define baseline configuration for Grafana Loki single-binary deployment.
+# All default values documented here can be overridden in inventory or playbooks.
+#
+# Supported OS distributions:
+# - Ubuntu 26.04 (Resolute), 24.04 (Noble), 22.04 (Jammy)
+# - Debian 13 (Trixie), 12 (Bookworm), 11 (Bullseye)
+# - EL9: Rocky Linux 9, RHEL 9, AlmaLinux 9
+#
+# Sections:
+#   1. Service State (Lifecycle)
+#   2. Deployment Method & Version
+#   3. General Settings
+#   4. User and Group
+#   5. Directories
+#   6. Networking
+#   7. Server Configuration
+#   8. Storage and Schema
+#   9. Retention and Compactor
+#   10. Ingestion Limits
+#   11. Compose Hardening (docker mode)
+#   12. Systemd Hardening (binary mode)
+#   13. Logging to Files (rsyslog + logrotate)
+#   14. Extra Configuration
+#   15. System Validation Settings
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# 1. Service State (Lifecycle)
+# -----------------------------------------------------------------------------
+# Overall role state: present (install and configure) or absent (uninstall)
+# Valid values: present, absent
+loki_state: "present"
+
+# Whether to purge Loki data directory during uninstallation (state: absent)
+# Security note: setting to true permanently deletes /var/lib/loki
+loki_remove_data: false
+
+# -----------------------------------------------------------------------------
+# 2. Deployment Method & Version
+# -----------------------------------------------------------------------------
+# Deployment method: docker (via Docker Compose) or binary (static binary + systemd)
+# Valid values: docker, binary
+loki_deployment_method: "docker"
+
+# Grafana Loki software version tag
+# Valid values: SemVer string, e.g., "3.6.13" (never "latest")
+loki_version: "3.6.13"
+
+# Docker container image repository
+# Valid values: image repository string
+loki_image: "grafana/loki"
+
+# Docker container image tag (must match loki_version)
+# Security note: image tag must never be 'latest'
+loki_image_tag: "3.6.13"
+
+# Expected SHA256 checksum string for native binary download verification
+# Valid values: empty string or "sha256:<hash>" formatted string
+loki_binary_checksum: ""
+
+# -----------------------------------------------------------------------------
+# 3. General Settings
+# -----------------------------------------------------------------------------
+# Enable privilege escalation (sudo) for tasks requiring root permissions
+# Valid values: true, false
+loki_become: true
+
+# Ensure Loki service is enabled on boot and running
+# Valid values: true, false
+loki_service_enabled: true
+
+# Manage service restarts on configuration change (set to false in container CI tests)
+# Valid values: true, false
+loki_manage_service_restart: true
+
+# -----------------------------------------------------------------------------
+# 4. User and Group
+# -----------------------------------------------------------------------------
+# System user name under which Loki service/container runs
+# Valid values: string, default "loki"
+loki_user: "loki"
+
+# System group name for Loki service
+# Valid values: string, default "loki"
+loki_group: "loki"
+
+# Numeric UID for loki user (matches built-in UID in grafana/loki image)
+# Valid values: integer >= 100
+loki_uid: 10001
+
+# Numeric GID for loki group (matches built-in GID in grafana/loki image)
+# Valid values: integer >= 100
+loki_gid: 10001
+
+# -----------------------------------------------------------------------------
+# 5. Directories
+# -----------------------------------------------------------------------------
+# Primary data storage directory for Loki TSDB index and chunks
+# Valid values: absolute path
+loki_data_dir: "/var/lib/loki"
+
+# Configuration directory where loki-config.yml is stored
+# Valid values: absolute path
+loki_config_dir: "/etc/loki"
+
+# Docker compose file directory (used when loki_deployment_method is 'docker')
+# Valid values: absolute path
+loki_compose_dir: "/etc/loki/compose"
+
+# Installation binary directory (used when loki_deployment_method is 'binary')
+# Valid values: absolute path
+loki_install_dir: "/usr/local/bin"
+
+# -----------------------------------------------------------------------------
+# 6. Networking
+# -----------------------------------------------------------------------------
+# HTTP listener port for Loki API (/ready, /metrics, /loki/api/v1/push, /loki/api/v1/query_range)
+# Valid values: 1-65535
+loki_http_port: 3100
+
+# gRPC listener port for internal inter-component communication
+# Valid values: 1-65535
+loki_grpc_port: 9096
+
+# IP address Loki listens on and publishes in published ports
+# IPv4 or IPv6 address string (default: "127.0.0.1" for loopback isolation)
+# Valid values: IPv4 or IPv6 address string
+loki_bind_address: "127.0.0.1"
+
+# Network interface name to bind to (optional override)
+# Valid values: empty string or interface name e.g. "tailscale0"
+loki_bind_interface: ""
+
+# -----------------------------------------------------------------------------
+# 7. Server Configuration
+# -----------------------------------------------------------------------------
+# Multi-tenant authentication requirement
+# Security note: set to false for single-tenant clusters protected by tailnet
+loki_auth_enabled: false
+
+# Log output verbosity level for Loki daemon
+# Valid values: debug, info, warn, error
+loki_log_level: "info"
+
+# Advanced server block settings override map
+# Valid values: dictionary of server settings
+loki_server_config: {}
+
+# -----------------------------------------------------------------------------
+# 8. Storage and Schema
+# -----------------------------------------------------------------------------
+# Storage engine backend for chunk and index storage
+# Valid values: filesystem
+loki_storage_backend: "filesystem"
+
+# Schema version for index storage
+# Valid values: v13
+loki_schema_version: "v13"
+
+# Date string from which the current schema version applies
+# Valid values: YYYY-MM-DD format string
+loki_schema_from: "2024-04-01"
+
+# Period duration for schema index files
+# Valid values: time duration string e.g. 24h
+loki_schema_index_period: "24h"
+
+# -----------------------------------------------------------------------------
+# 9. Retention and Compactor
+# -----------------------------------------------------------------------------
+# Log retention window enforced by compactor
+# Valid values: duration string e.g. 168h (7 days)
+loki_retention_period: "168h"
+
+# Safety waiver acknowledgment flag when filesystem retention exceeds 720h (30 days)
+# Valid values: true, false
+loki_filesystem_retention_acknowledged: false
+
+# Enable compactor service for retention enforcement and chunk compaction
+# Valid values: true, false
+loki_compactor_enabled: true
+
+# Compactor working directory for staging temporary files
+# Valid values: absolute path
+loki_compactor_working_dir: "/var/lib/loki/compactor"
+
+# Storage mechanism for deletion requests in compactor
+# Valid values: filesystem
+loki_delete_request_store: "filesystem"
+
+# -----------------------------------------------------------------------------
+# 10. Ingestion Limits
+# -----------------------------------------------------------------------------
+# Ingestion rate limit in megabytes per second per tenant
+# Valid values: positive integer or float
+loki_ingestion_rate_mb: 4
+
+# Ingestion burst size limit in megabytes per tenant
+# Valid values: positive integer or float
+loki_ingestion_burst_size_mb: 6
+
+# Maximum active streams per user tenant
+# Valid values: positive integer
+loki_max_streams_per_user: 10000
+
+# Maximum active streams per user globally
+# Valid values: positive integer
+loki_max_global_streams_per_user: 0
+
+# Maximum time series returned per query
+# Valid values: positive integer
+loki_max_query_series: 500
+
+# Target size in bytes for compressed log chunks
+# Valid values: positive integer
+loki_chunk_target_size: 1572864
+
+# Maximum duration a log chunk can stay idle before flushing
+# Valid values: time duration string e.g. 30m
+loki_chunk_idle_period: "30m"
+
+# -----------------------------------------------------------------------------
+# 11. Compose Hardening (docker mode)
+# -----------------------------------------------------------------------------
+# Restart policy for Docker Compose stack
+# Valid values: unless-stopped, always, on-failure, "no"
+loki_compose_restart_policy: "unless-stopped"
+
+# Read-only root filesystem flag for Docker container
+# Valid values: true, false
+loki_compose_read_only: true
+
+# Docker logging driver for container stdout/stderr
+# Valid values: local, json-file, journald
+loki_compose_log_driver: "local"
+
+# Container RAM memory limit
+# Valid values: memory limit string e.g. 1g, 512m
+loki_compose_memory_limit: "1g"
+
+# -----------------------------------------------------------------------------
+# 12. Systemd Hardening (binary mode)
+# -----------------------------------------------------------------------------
+# Enable strict systemd security sandboxing for binary mode service
+# Valid values: true, false
+loki_systemd_hardening_enabled: true
+
+# Additional systemd unit directives for custom customization
+# Valid values: list of strings (key=value formatted directives)
+loki_systemd_extra_options: []
+
+# -----------------------------------------------------------------------------
+# 13. Logging to Files (rsyslog + logrotate)
+# -----------------------------------------------------------------------------
+# Configure dedicated rsyslog file redirection for Loki daemon logs
+# Valid values: true, false
+loki_configure_rsyslog: false
+
+# Configure logrotate for Loki log files
+# Valid values: true, false
+loki_configure_logrotate: false
+
+# Logrotate configuration settings dictionary
+# Valid values: dict with frequency, count, size, options
+loki_logrotate_options:
+  frequency: "daily"
+  count: 7
+  rotate_size: "100M"
+  compress: true
+
+# -----------------------------------------------------------------------------
+# 14. Extra Configuration
+# -----------------------------------------------------------------------------
+# Escape hatch dictionary for overriding or extending loki-config.yml
+# Deep-merged recursively into rendered configuration
+# Valid values: dictionary matching Loki YAML configuration schema
+loki_extra_config: {}
+
+# -----------------------------------------------------------------------------
+# 15. System Validation Settings
+# -----------------------------------------------------------------------------
+# Perform preflight host validation checks (disk space, RAM)
+# Valid values: true, false
+loki_validate_system: true
+
+# Minimum free disk space in MB required on Loki data partition
+# Valid values: positive integer
+loki_min_free_disk_mb: 2048
+
+# Minimum total system memory in MB required on target host
+# Valid values: positive integer
+loki_min_memory_mb: 1024

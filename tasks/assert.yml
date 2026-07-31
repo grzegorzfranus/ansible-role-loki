@@ -1,0 +1,249 @@
+---
+# =============================================================================
+# Ansible Role: Loki - Tasks: Variable Assertions
+# =============================================================================
+# Runtime validation of variable types, allowed choices, ranges, and cross-field logic.
+# =============================================================================
+
+- name: Loki | assert | Validate service state choice
+  ansible.builtin.assert:
+    that:
+      - loki_state is defined
+      - loki_state is string
+      - loki_state | lower in ['present', 'absent']
+      - loki_remove_data is boolean
+    fail_msg: "Invalid loki_state '{{ loki_state | default('undefined') }}' or loki_remove_data flag"
+    success_msg: "Service state validated: loki_state={{ loki_state }}, loki_remove_data={{ loki_remove_data }}"
+
+- name: Loki | assert | Validate deployment method choices
+  ansible.builtin.assert:
+    that:
+      - loki_deployment_method is defined
+      - loki_deployment_method is string
+      - loki_deployment_method | lower in ['docker', 'binary']
+    fail_msg: "loki_deployment_method must be 'docker' or 'binary', got '{{ loki_deployment_method | default('undefined') }}'"
+    success_msg: "Deployment method validated: loki_deployment_method={{ loki_deployment_method }}"
+
+- name: Loki | assert | Validate version format
+  ansible.builtin.assert:
+    that:
+      - loki_version is defined
+      - loki_version is string
+      - loki_version is match('^[0-9]+\\.[0-9]+\\.[0-9]+$')
+    fail_msg: "loki_version must be a valid SemVer string (e.g. '3.6.13'), got '{{ loki_version | default('undefined') }}'"
+    success_msg: "Software version validated: loki_version={{ loki_version }}"
+
+- name: Loki | assert | Validate container image and tag constraints
+  ansible.builtin.assert:
+    that:
+      - loki_image is defined
+      - loki_image is string
+      - loki_image | length > 0
+      - loki_image_tag is defined
+      - loki_image_tag is string
+      - loki_image_tag | length > 0
+      - loki_image_tag | lower != 'latest'
+    fail_msg: "loki_image_tag must be a pinned version string and cannot be 'latest', got '{{ loki_image_tag | default('undefined') }}'"
+    success_msg: "Container image validated: loki_image={{ loki_image }}, loki_image_tag={{ loki_image_tag }}"
+
+- name: Loki | assert | Cross-field validation of version vs image tag
+  ansible.builtin.assert:
+    that:
+      - loki_deployment_method | lower == 'binary' or (loki_version.split('.')[0:2] == loki_image_tag.split('.')[0:2])
+    fail_msg: "loki_version '{{ loki_version }}' major.minor must match loki_image_tag '{{ loki_image_tag }}' major.minor"
+    success_msg: "Version and image tag major.minor versions match: {{ loki_version }}"
+
+- name: Loki | assert | Validate general service settings
+  ansible.builtin.assert:
+    that:
+      - loki_become is boolean
+      - loki_service_enabled is boolean
+      - loki_manage_service_restart is boolean
+    fail_msg: "loki_become, loki_service_enabled, and loki_manage_service_restart must be booleans"
+    success_msg: "General service settings validated: become={{ loki_become }}, enabled={{ loki_service_enabled }}, manage_restart={{ loki_manage_service_restart }}"
+
+- name: Loki | assert | Validate system user and group settings
+  ansible.builtin.assert:
+    that:
+      - loki_user is string
+      - loki_user | length > 0
+      - loki_group is string
+      - loki_group | length > 0
+      - loki_uid is integer
+      - loki_uid >= 100
+      - loki_gid is integer
+      - loki_gid >= 100
+    fail_msg: "Invalid user/group specifications: user='{{ loki_user }}', group='{{ loki_group }}', uid={{ loki_uid }}, gid={{ loki_gid }}"
+    success_msg: "User and group validated: {{ loki_user }}:{{ loki_group }} ({{ loki_uid }}:{{ loki_gid }})"
+
+- name: Loki | assert | Validate directory absolute paths
+  ansible.builtin.assert:
+    that:
+      - loki_data_dir is string
+      - loki_data_dir is match('^/')
+      - loki_config_dir is string
+      - loki_config_dir is match('^/')
+      - loki_compose_dir is string
+      - loki_compose_dir is match('^/')
+      - loki_install_dir is string
+      - loki_install_dir is match('^/')
+    fail_msg: "Directories must be absolute paths starting with '/'"
+    success_msg: "Directory paths validated: data={{ loki_data_dir }}, config={{ loki_config_dir }}"
+
+- name: Loki | assert | Validate network ports and addresses
+  ansible.builtin.assert:
+    that:
+      - loki_http_port is integer
+      - loki_http_port >= 1
+      - loki_http_port <= 65535
+      - loki_grpc_port is integer
+      - loki_grpc_port >= 1
+      - loki_grpc_port <= 65535
+      - loki_http_port != loki_grpc_port
+      - loki_bind_address is string
+      - loki_bind_address | length > 0
+    fail_msg: "Invalid network settings: http={{ loki_http_port }}, grpc={{ loki_grpc_port }}, bind={{ loki_bind_address }}"
+    success_msg: "Network settings validated: http={{ loki_http_port }}, grpc={{ loki_grpc_port }}, bind={{ loki_bind_address }}"
+
+- name: Loki | assert | Validate server configuration options
+  ansible.builtin.assert:
+    that:
+      - loki_auth_enabled is boolean
+      - loki_log_level is string
+      - loki_log_level | lower in ['debug', 'info', 'warn', 'error']
+      - loki_server_config is mapping
+    fail_msg: "Invalid server config options: auth={{ loki_auth_enabled }}, log_level={{ loki_log_level }}"
+    success_msg: "Server configuration validated: auth={{ loki_auth_enabled }}, log_level={{ loki_log_level }}"
+
+- name: Loki | assert | Validate storage backend and schema options
+  ansible.builtin.assert:
+    that:
+      - loki_storage_backend is string
+      - loki_storage_backend | lower in ['filesystem']
+      - loki_schema_version is string
+      - loki_schema_version | length > 0
+      - loki_schema_from is string
+      - loki_schema_from is match('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+      - loki_schema_index_period is string
+      - loki_schema_index_period is match('^[0-9]+[hdw]$')
+    fail_msg: "Invalid storage/schema settings: backend={{ loki_storage_backend }}, schema={{ loki_schema_version }}, from={{ loki_schema_from }}"
+    success_msg: "Storage and schema validated: backend={{ loki_storage_backend }}, schema={{ loki_schema_version }}"
+
+- name: Loki | assert | Validate retention and compactor settings
+  ansible.builtin.assert:
+    that:
+      - loki_retention_period is string
+      - loki_retention_period is match('^[0-9]+[hdw]$')
+      - loki_compactor_enabled is boolean
+      - loki_compactor_working_dir is string
+      - loki_compactor_working_dir is match('^/')
+      - loki_delete_request_store is string
+      - loki_delete_request_store | lower in ['filesystem']
+    fail_msg: "Invalid retention or compactor configuration: period={{ loki_retention_period }}, compactor_enabled={{ loki_compactor_enabled }}"
+    success_msg: "Retention and compactor validated: period={{ loki_retention_period }}, enabled={{ loki_compactor_enabled }}"
+
+- name: Loki | assert | Cross-field validation for compactor retention
+  ansible.builtin.assert:
+    that:
+      - not loki_compactor_enabled or (loki_retention_period | length > 0)
+    fail_msg: "loki_retention_period must be specified when loki_compactor_enabled is true"
+    success_msg: "Compactor retention cross-field check passed"
+
+- name: Loki | assert | Safety guard for long filesystem retention windows
+  ansible.builtin.assert:
+    that:
+      - loki_filesystem_retention_acknowledged is boolean
+      - >-
+        loki_storage_backend | lower != 'filesystem' or
+        (__loki_retention_hours | int <= 720) or
+        (loki_filesystem_retention_acknowledged | bool)
+    fail_msg: >-
+      Global retention '{{ loki_retention_period }}' ({{ __loki_retention_hours }}h) exceeds 720h guidance for
+      filesystem storage backend. Set loki_filesystem_retention_acknowledged: true to proceed.
+    success_msg: "Filesystem retention window safety guard check passed ({{ __loki_retention_hours }}h)"
+  vars:
+    __loki_retention_unit: "{{ loki_retention_period | regex_replace('[0-9]', '') }}"
+    __loki_retention_value: "{{ loki_retention_period | regex_replace('[^0-9]', '') | int }}"
+    __loki_unit_map:
+      h: 1
+      d: 24
+      w: 168
+    __loki_retention_hours: "{{ (__loki_retention_value | int) * (__loki_unit_map[__loki_retention_unit] | default(1) | int) }}"
+
+- name: Loki | assert | Validate ingestion rate and stream limits
+  ansible.builtin.assert:
+    that:
+      - loki_ingestion_rate_mb is number
+      - loki_ingestion_rate_mb > 0
+      - loki_ingestion_burst_size_mb is number
+      - loki_ingestion_burst_size_mb >= loki_ingestion_rate_mb
+      - loki_max_streams_per_user is integer
+      - loki_max_streams_per_user >= 0
+      - loki_max_global_streams_per_user is integer
+      - loki_max_global_streams_per_user >= 0
+      - loki_max_query_series is integer
+      - loki_max_query_series >= 0
+      - loki_chunk_target_size is integer
+      - loki_chunk_target_size > 0
+      - loki_chunk_idle_period is string
+      - loki_chunk_idle_period is match('^[0-9]+[smh]$')
+    fail_msg: "Invalid ingestion limits or chunk parameters"
+    success_msg: "Ingestion limits validated: rate={{ loki_ingestion_rate_mb }}MB/s, burst={{ loki_ingestion_burst_size_mb }}MB"
+
+- name: Loki | assert | Validate docker compose hardening options
+  ansible.builtin.assert:
+    that:
+      - loki_compose_restart_policy is string
+      - loki_compose_restart_policy in ['unless-stopped', 'always', 'on-failure', 'no']
+      - loki_compose_read_only is boolean
+      - loki_compose_log_driver is string
+      - loki_compose_memory_limit is string
+    fail_msg: "Invalid Docker compose hardening options"
+    success_msg: "Compose hardening validated: restart={{ loki_compose_restart_policy }}, read_only={{ loki_compose_read_only }}"
+
+- name: Loki | assert | Validate systemd hardening options
+  ansible.builtin.assert:
+    that:
+      - loki_systemd_hardening_enabled is boolean
+      - loki_systemd_extra_options is sequence
+    fail_msg: "Invalid systemd hardening options"
+    success_msg: "Systemd hardening validated: enabled={{ loki_systemd_hardening_enabled }}"
+
+- name: Loki | assert | Validate rsyslog and logrotate settings
+  ansible.builtin.assert:
+    that:
+      - loki_configure_rsyslog is boolean
+      - loki_configure_logrotate is boolean
+      - loki_logrotate_options is mapping
+    fail_msg: "Invalid rsyslog or logrotate settings"
+    success_msg: "Logging configuration validated: rsyslog={{ loki_configure_rsyslog }}, logrotate={{ loki_configure_logrotate }}"
+
+- name: Loki | assert | Validate detailed logrotate option fields when enabled
+  ansible.builtin.assert:
+    that:
+      - loki_logrotate_options.frequency is defined
+      - loki_logrotate_options.frequency in ['hourly', 'daily', 'weekly', 'monthly']
+      - loki_logrotate_options.count is defined
+      - loki_logrotate_options.count is integer
+      - loki_logrotate_options.count >= 1
+    fail_msg: "Invalid logrotate_options: frequency must be hourly/daily/weekly/monthly, count >= 1"
+    success_msg: "Logrotate detailed options validated: frequency={{ loki_logrotate_options.frequency }}, count={{ loki_logrotate_options.count }}"
+  when: loki_configure_logrotate | bool
+
+- name: Loki | assert | Validate extra config dictionary structure
+  ansible.builtin.assert:
+    that:
+      - loki_extra_config is mapping
+    fail_msg: "loki_extra_config must be a dictionary map"
+    success_msg: "loki_extra_config dictionary structure validated"
+
+- name: Loki | assert | Validate preflight system requirement parameters
+  ansible.builtin.assert:
+    that:
+      - loki_validate_system is boolean
+      - loki_min_free_disk_mb is integer
+      - loki_min_free_disk_mb > 0
+      - loki_min_memory_mb is integer
+      - loki_min_memory_mb > 0
+    fail_msg: "Invalid preflight validation thresholds"
+    success_msg: "System preflight thresholds validated: min_disk={{ loki_min_free_disk_mb }}MB, min_ram={{ loki_min_memory_mb }}MB"

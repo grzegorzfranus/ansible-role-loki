@@ -1,0 +1,27 @@
+---
+# =============================================================================
+# Ansible Role: Loki - Tasks: System User & Group Creation
+# =============================================================================
+# Creates dedicated system group and user at fixed UID/GID 10001.
+# =============================================================================
+
+- name: Loki | user | Create system group
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.group:
+    name: "{{ loki_group }}"
+    gid: "{{ loki_gid }}"
+    state: present
+    system: true
+
+- name: Loki | user | Create system user
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.user:
+    name: "{{ loki_user }}"
+    uid: "{{ loki_uid }}"
+    group: "{{ loki_group }}"
+    comment: "Grafana Loki service account"
+    home: "{{ loki_data_dir }}"
+    shell: "/usr/sbin/nologin"
+    state: present
+    system: true
+    create_home: false

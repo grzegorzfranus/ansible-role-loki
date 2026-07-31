@@ -1,0 +1,327 @@
+---
+argument_specs:
+  main:
+    short_description: "Deploy Grafana Loki log aggregation stack (Docker Compose or binary mode)"
+    description:
+      - "Installs and configures Grafana Loki in single-binary mode with local TSDB storage."
+      - "Supports Docker Compose and native binary + systemd deployment modes."
+      - "Supports Ubuntu 22.04/24.04/26.04, Debian 11/12/13, and EL9 (Rocky Linux 9, RHEL 9, AlmaLinux 9)."
+    author: "Grzegorz Franus"
+
+    options:
+      # 1. Service State (Lifecycle)
+      loki_state:
+        description: "Overall role state: present (install and configure) or absent (uninstall)"
+        type: str
+        default: "present"
+        choices:
+          - present
+          - absent
+
+      loki_remove_data:
+        description: "Whether to purge Loki data directory during uninstallation (state: absent)"
+        type: bool
+        default: false
+
+      # 2. Deployment Method & Version
+      loki_deployment_method:
+        description: "Deployment method: docker (via Docker Compose) or binary (static binary + systemd)"
+        type: str
+        default: "docker"
+        choices:
+          - docker
+          - binary
+
+      loki_version:
+        description: "Grafana Loki software version tag (e.g. '3.6.13')"
+        type: str
+        default: "3.6.13"
+
+      loki_image:
+        description: "Docker container image repository"
+        type: str
+        default: "grafana/loki"
+
+      loki_image_tag:
+        description: "Docker container image tag (must match loki_version, never 'latest')"
+        type: str
+        default: "3.6.13"
+
+      loki_binary_checksum:
+        description: "Expected SHA256 checksum string for native binary download verification"
+        type: str
+        default: ""
+
+      # 3. General Settings
+      loki_become:
+        description: "Enable privilege escalation for tasks requiring root permissions"
+        type: bool
+        default: true
+
+      loki_service_enabled:
+        description: "Ensure Loki service is enabled on boot and running"
+        type: bool
+        default: true
+
+      loki_manage_service_restart:
+        description: "Manage service restarts on configuration change"
+        type: bool
+        default: true
+
+      # 4. User and Group
+      loki_user:
+        description: "System user name under which Loki service/container runs"
+        type: str
+        default: "loki"
+
+      loki_group:
+        description: "System group name for Loki service"
+        type: str
+        default: "loki"
+
+      loki_uid:
+        description: "Numeric UID for loki user"
+        type: int
+        default: 10001
+
+      loki_gid:
+        description: "Numeric GID for loki group"
+        type: int
+        default: 10001
+
+      # 5. Directories
+      loki_data_dir:
+        description: "Primary data storage directory for Loki TSDB index and chunks"
+        type: str
+        default: "/var/lib/loki"
+
+      loki_config_dir:
+        description: "Configuration directory where loki-config.yml is stored"
+        type: str
+        default: "/etc/loki"
+
+      loki_compose_dir:
+        description: "Docker compose file directory (used when loki_deployment_method is 'docker')"
+        type: str
+        default: "/etc/loki/compose"
+
+      loki_install_dir:
+        description: "Installation binary directory (used when loki_deployment_method is 'binary')"
+        type: str
+        default: "/usr/local/bin"
+
+      # 6. Networking
+      loki_http_port:
+        description: "HTTP listener port for Loki API"
+        type: int
+        default: 3100
+
+      loki_grpc_port:
+        description: "gRPC listener port for internal communication"
+        type: int
+        default: 9096
+
+      loki_bind_address:
+        description: "IP address Loki listens on and publishes in published ports"
+        type: str
+        default: "127.0.0.1"
+
+      loki_bind_interface:
+        description: "Network interface name to bind to (optional override)"
+        type: str
+        default: ""
+
+      # 7. Server Configuration
+      loki_auth_enabled:
+        description: "Multi-tenant authentication requirement"
+        type: bool
+        default: false
+
+      loki_log_level:
+        description: "Log output verbosity level for Loki daemon"
+        type: str
+        default: "info"
+        choices:
+          - debug
+          - info
+          - warn
+          - error
+
+      loki_server_config:
+        description: "Advanced server block settings override map"
+        type: dict
+        default: {}
+
+      # 8. Storage and Schema
+      loki_storage_backend:
+        description: "Storage engine backend for chunk and index storage"
+        type: str
+        default: "filesystem"
+        choices:
+          - filesystem
+
+      loki_schema_version:
+        description: "Schema version for index storage"
+        type: str
+        default: "v13"
+
+      loki_schema_from:
+        description: "Date string from which current schema version applies"
+        type: str
+        default: "2024-04-01"
+
+      loki_schema_index_period:
+        description: "Period duration for schema index files"
+        type: str
+        default: "24h"
+
+      # 9. Retention and Compactor
+      loki_retention_period:
+        description: "Log retention window enforced by compactor"
+        type: str
+        default: "168h"
+
+      loki_filesystem_retention_acknowledged:
+        description: "Safety waiver acknowledgment flag when filesystem retention exceeds 720h"
+        type: bool
+        default: false
+
+      loki_compactor_enabled:
+        description: "Enable compactor service for retention enforcement"
+        type: bool
+        default: true
+
+      loki_compactor_working_dir:
+        description: "Compactor working directory for staging temporary files"
+        type: str
+        default: "/var/lib/loki/compactor"
+
+      loki_delete_request_store:
+        description: "Storage mechanism for deletion requests in compactor"
+        type: str
+        default: "filesystem"
+
+      # 10. Ingestion Limits
+      loki_ingestion_rate_mb:
+        description: "Ingestion rate limit in megabytes per second per tenant"
+        type: int
+        default: 4
+
+      loki_ingestion_burst_size_mb:
+        description: "Ingestion burst size limit in megabytes per tenant"
+        type: int
+        default: 6
+
+      loki_max_streams_per_user:
+        description: "Maximum active streams per user tenant"
+        type: int
+        default: 10000
+
+      loki_max_global_streams_per_user:
+        description: "Maximum active streams per user globally"
+        type: int
+        default: 0
+
+      loki_max_query_series:
+        description: "Maximum time series returned per query"
+        type: int
+        default: 500
+
+      loki_chunk_target_size:
+        description: "Target size in bytes for compressed log chunks"
+        type: int
+        default: 1572864
+
+      loki_chunk_idle_period:
+        description: "Maximum duration a log chunk can stay idle before flushing"
+        type: str
+        default: "30m"
+
+      # 11. Compose Hardening (docker mode)
+      loki_compose_restart_policy:
+        description: "Restart policy for Docker Compose stack"
+        type: str
+        default: "unless-stopped"
+        choices:
+          - unless-stopped
+          - always
+          - on-failure
+          - "no"
+
+      loki_compose_read_only:
+        description: "Read-only root filesystem flag for Docker container"
+        type: bool
+        default: true
+
+      loki_compose_log_driver:
+        description: "Docker logging driver for container stdout/stderr"
+        type: str
+        default: "local"
+
+      loki_compose_memory_limit:
+        description: "Container RAM memory limit"
+        type: str
+        default: "1g"
+
+      # 12. Systemd Hardening (binary mode)
+      loki_systemd_hardening_enabled:
+        description: "Enable strict systemd security sandboxing for binary mode service"
+        type: bool
+        default: true
+
+      loki_systemd_extra_options:
+        description: "Additional systemd unit directives for custom customization"
+        type: list
+        elements: str
+        default: []
+
+      # 13. Logging to Files (rsyslog + logrotate)
+      loki_configure_rsyslog:
+        description: "Configure dedicated rsyslog file redirection for Loki daemon logs"
+        type: bool
+        default: false
+
+      loki_configure_logrotate:
+        description: "Configure logrotate for Loki log files"
+        type: bool
+        default: false
+
+      loki_logrotate_options:
+        description: "Logrotate configuration settings dictionary"
+        type: dict
+        options:
+          frequency:
+            type: str
+            choices: [hourly, daily, weekly, monthly]
+            default: "daily"
+          count:
+            type: int
+            default: 7
+          rotate_size:
+            type: str
+            default: "100M"
+          compress:
+            type: bool
+            default: true
+
+      # 14. Extra Configuration
+      loki_extra_config:
+        description: "Escape hatch dictionary for overriding or extending loki-config.yml"
+        type: dict
+        default: {}
+
+      # 15. System Validation Settings
+      loki_validate_system:
+        description: "Perform preflight host validation checks (disk space, RAM)"
+        type: bool
+        default: true
+
+      loki_min_free_disk_mb:
+        description: "Minimum free disk space in MB required on Loki data partition"
+        type: int
+        default: 2048
+
+      loki_min_memory_mb:
+        description: "Minimum total system memory in MB required on target host"
+        type: int
+        default: 1024

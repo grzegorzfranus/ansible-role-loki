@@ -1,0 +1,22 @@
+---
+# =============================================================================
+# Ansible Role: Loki - External Requirements
+# =============================================================================
+# Roles and collections required before this role can run.
+# Install with: ansible-galaxy install -r requirements.yml
+# =============================================================================
+
+roles:
+  # Docker Engine + Compose plugin — required when loki_deployment_method is 'docker'
+  - name: grzegorzfranus.docker
+    src: https://github.com/grzegorzfranus/ansible-role-docker
+    scm: git
+    version: main
+
+collections:
+  # docker_compose_v2 module used to manage the Loki stack
+  - name: community.docker
+    version: ">=3.10.0"
+  # posix utilities (sysctl, mount) used by prerequisites
+  - name: ansible.posix
+    version: ">=1.5.0"
