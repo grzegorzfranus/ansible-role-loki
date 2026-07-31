@@ -33,6 +33,8 @@ Agents (Alloy/Vector) ──[HTTP 3100 / Push]──> Grafana Loki (Single Binar
 - **Python**: 3.9 or higher on target hosts
 - **Network**: Port 3100 open on target host (Tailscale magicDNS or LAN)
 - **Privileges**: Privilege escalation enabled (`loki_become: true`, default)
+- **Docker Role Dependency**: When using Docker Compose mode (`loki_deployment_method: "docker"`), the external role `grzegorzfranus.docker` is required. It is installed via `requirements.yml` and included dynamically via `tasks/install_docker.yml` rather than as a static meta dependency.
+- **Collections**: Requires `community.docker` and `ansible.posix` collections as defined in `meta/main.yml`.
 
 ### Supported Operating Systems
 

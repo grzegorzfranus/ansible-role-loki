@@ -155,12 +155,20 @@
       - loki_filesystem_retention_acknowledged is boolean
       - >-
         loki_storage_backend | lower != 'filesystem' or
-        (loki_retention_period | regex_replace('[^0-9]', '') | int <= 720) or
+        (__loki_retention_hours | int <= 720) or
         (loki_filesystem_retention_acknowledged | bool)
     fail_msg: >-
-      Global retention '{{ loki_retention_period }}' exceeds 720h guidance for filesystem storage backend.
-      Set loki_filesystem_retention_acknowledged: true to proceed.
-    success_msg: "Filesystem retention window safety guard check passed"
+      Global retention '{{ loki_retention_period }}' ({{ __loki_retention_hours }}h) exceeds 720h guidance for
+      filesystem storage backend. Set loki_filesystem_retention_acknowledged: true to proceed.
+    success_msg: "Filesystem retention window safety guard check passed ({{ __loki_retention_hours }}h)"
+  vars:
+    __loki_retention_unit: "{{ loki_retention_period | regex_replace('[0-9]', '') }}"
+    __loki_retention_value: "{{ loki_retention_period | regex_replace('[^0-9]', '') | int }}"
+    __loki_unit_map:
+      h: 1
+      d: 24
+      w: 168
+    __loki_retention_hours: "{{ (__loki_retention_value | int) * (__loki_unit_map[__loki_retention_unit] | default(1) | int) }}"
 
 - name: Loki | assert | Validate ingestion rate and stream limits
   ansible.builtin.assert:
