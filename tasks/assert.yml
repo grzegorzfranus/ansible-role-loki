@@ -149,6 +149,19 @@
     fail_msg: "loki_retention_period must be specified when loki_compactor_enabled is true"
     success_msg: "Compactor retention cross-field check passed"
 
+- name: Loki | assert | Safety guard for long filesystem retention windows
+  ansible.builtin.assert:
+    that:
+      - loki_filesystem_retention_acknowledged is boolean
+      - >-
+        loki_storage_backend | lower != 'filesystem' or
+        (loki_retention_period | regex_replace('[^0-9]', '') | int <= 720) or
+        (loki_filesystem_retention_acknowledged | bool)
+    fail_msg: >-
+      Global retention '{{ loki_retention_period }}' exceeds 720h guidance for filesystem storage backend.
+      Set loki_filesystem_retention_acknowledged: true to proceed.
+    success_msg: "Filesystem retention window safety guard check passed"
+
 - name: Loki | assert | Validate ingestion rate and stream limits
   ansible.builtin.assert:
     that:

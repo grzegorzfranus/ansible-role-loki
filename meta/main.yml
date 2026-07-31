@@ -35,4 +35,6 @@ collections:
   - community.docker
   - ansible.posix
 
+# Role dependencies (grzegorzfranus.docker) are included dynamically via tasks/install_docker.yml
+# when loki_deployment_method | lower == 'docker' to allow standalone playbook syntax checking.
 dependencies: []

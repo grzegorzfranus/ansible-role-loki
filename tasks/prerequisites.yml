@@ -38,6 +38,7 @@
 - name: Loki | prerequisites | Gather installed packages (EL)
   ansible.builtin.package_facts:
     manager: auto
+  changed_when: false
   when: ansible_facts['os_family'] == 'RedHat'
 
 - name: Loki | prerequisites | Ensure curl present when neither curl nor curl-minimal installed (EL)

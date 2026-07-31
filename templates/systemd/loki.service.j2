@@ -7,7 +7,7 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-Type=simple
+Type=exec
 User={{ loki_user }}
 Group={{ loki_group }}
 ExecStart={{ loki_install_dir }}/loki -config.file={{ loki_config_dir }}/loki-config.yml -target=all

@@ -8,7 +8,9 @@
 - name: Loki | install_docker | Ensure Docker Engine is installed and configured
   ansible.builtin.include_role:
     name: grzegorzfranus.docker
-  when: loki_manage_service_restart | bool
+  when:
+    - loki_deployment_method | lower == 'docker'
+    - loki_manage_service_restart | bool
 
 - name: Loki | install_docker | Pull Grafana Loki container image
   community.docker.docker_image_pull:
@@ -17,4 +19,6 @@
   retries: 3
   delay: 5
   until: __loki_docker_pull is succeeded
-  when: loki_manage_service_restart | bool
+  when:
+    - loki_deployment_method | lower == 'docker'
+    - loki_manage_service_restart | bool

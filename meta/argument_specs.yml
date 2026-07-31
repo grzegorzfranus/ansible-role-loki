@@ -181,6 +181,11 @@ argument_specs:
         type: str
         default: "168h"
 
+      loki_filesystem_retention_acknowledged:
+        description: "Safety waiver acknowledgment flag when filesystem retention exceeds 720h"
+        type: bool
+        default: false
+
       loki_compactor_enabled:
         description: "Enable compactor service for retention enforcement"
         type: bool
