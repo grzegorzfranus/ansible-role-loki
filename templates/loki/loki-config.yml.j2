@@ -43,7 +43,9 @@
     'ingestion_burst_size_mb': loki_ingestion_burst_size_mb | int,
     'max_streams_per_user': loki_max_streams_per_user | int,
     'max_global_streams_per_user': loki_max_global_streams_per_user | int,
-    'max_query_series': loki_max_query_series | int,
+    'max_query_series': loki_max_query_series | int
+  },
+  'ingester': {
     'chunk_target_size': loki_chunk_target_size | int,
     'chunk_idle_period': loki_chunk_idle_period
   },
