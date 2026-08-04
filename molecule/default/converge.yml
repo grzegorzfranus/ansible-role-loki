@@ -30,6 +30,7 @@
       vars:
         loki_become: false
         loki_deployment_method: "binary"
+        loki_bind_address: "0.0.0.0"
         loki_manage_service_restart: false
 
 - name: Loki | molecule | default | Converge (Docker Template Pass)
@@ -41,5 +42,6 @@
       vars:
         loki_become: false
         loki_deployment_method: "docker"
+        loki_bind_address: "0.0.0.0"
         loki_manage_service_restart: false
         loki_compose_read_only: true

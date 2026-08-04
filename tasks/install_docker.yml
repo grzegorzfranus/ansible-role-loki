@@ -13,6 +13,7 @@
     - loki_manage_service_restart | bool
 
 - name: Loki | install_docker | Pull Grafana Loki container image
+  become: "{{ loki_become | bool }}"
   community.docker.docker_image_pull:
     name: "{{ loki_image }}:{{ loki_image_tag }}"
   register: __loki_docker_pull
