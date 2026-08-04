@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/grzegorzfranus/ansible-role-loki/compare/v0.2.0...v0.2.1) (2026-08-04)
+
+
+### Bug Fixes
+
+* **docker:** add become to docker_image_pull task ([#5](https://github.com/grzegorzfranus/ansible-role-loki/issues/5)) ([3526017](https://github.com/grzegorzfranus/ansible-role-loki/commit/352601788a9b8c643219d427d1b53d97ba345acc))
+
 ## [0.2.0](https://github.com/grzegorzfranus/ansible-role-loki/compare/v0.1.0...v0.2.0) (2026-07-31)
 
 
