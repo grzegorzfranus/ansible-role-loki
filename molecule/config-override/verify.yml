@@ -27,3 +27,50 @@
           - __ver_config_data.table_manager.retention_deletes_enabled | bool
         fail_msg: "Overridden configuration parameters or loki_extra_config deep-merge failed"
         success_msg: "Overridden configuration parameters and loki_extra_config deep-merge verified in loki-config.yml"
+
+    - name: Verify | Check logrotate configuration file
+      ansible.builtin.stat:
+        path: "/etc/logrotate.d/loki"
+      register: __ver_logrotate_stat
+
+    - name: Verify | Assert logrotate configuration file exists with mode 0644
+      ansible.builtin.assert:
+        that:
+          - __ver_logrotate_stat.stat.exists | bool
+          - __ver_logrotate_stat.stat.mode == "0644"
+        fail_msg: "Logrotate configuration /etc/logrotate.d/loki is missing or has incorrect mode"
+        success_msg: "Logrotate configuration file verified successfully"
+
+    - name: Verify | Read rendered logrotate configuration
+      ansible.builtin.slurp:
+        src: "/etc/logrotate.d/loki"
+      register: __ver_logrotate_slurp
+
+    - name: Verify | Decode rendered logrotate configuration content
+      ansible.builtin.set_fact:
+        __ver_logrotate_content: "{{ __ver_logrotate_slurp.content | b64decode }}"
+
+    - name: Verify | Assert logrotate directives (olddir, maxsize, dateformat, dateext, and absence of size)
+      ansible.builtin.assert:
+        that:
+          - "'olddir /var/log/archive/loki' in __ver_logrotate_content"
+          - "'maxsize 100M' in __ver_logrotate_content"
+          - "'dateext' in __ver_logrotate_content"
+          - "'dateformat -%Y%m%d' in __ver_logrotate_content"
+          - "not (__ver_logrotate_content is regex('(?m)^\\s*size\\s+'))"
+        fail_msg: "Logrotate directives validation failed (missing olddir/maxsize/dateformat or invalid size directive present)"
+        success_msg: "Logrotate directives verified successfully (olddir, maxsize, dateformat present, size directive absent)"
+
+    - name: Verify | Check archive log directory existence and permissions
+      ansible.builtin.stat:
+        path: "/var/log/archive/loki"
+      register: __ver_archive_dir_stat
+
+    - name: Verify | Assert archive log directory exists with mode 0755
+      ansible.builtin.assert:
+        that:
+          - __ver_archive_dir_stat.stat.exists | bool
+          - __ver_archive_dir_stat.stat.isdir | bool
+          - __ver_archive_dir_stat.stat.mode == "0755"
+        fail_msg: "Archive log directory /var/log/archive/loki is missing or has incorrect permissions"
+        success_msg: "Archive log directory verified successfully"

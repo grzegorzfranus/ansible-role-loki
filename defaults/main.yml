@@ -265,12 +265,30 @@ loki_configure_rsyslog: false
 loki_configure_logrotate: false
 
 # Logrotate configuration settings dictionary
-# Valid values: dict with frequency, count, size, options
+# Valid values: dict with frequency, count, rotate_size, compress, archive_directory_path, dateext, dateformat
 loki_logrotate_options:
+  # Log rotation frequency interval
+  # Valid values: hourly, daily, weekly, monthly
   frequency: "daily"
-  count: 7
+  # Number of rotated log files to retain before removing
+  # Valid values: integer >= 1
+  count: 14
+  # Maximum file size before rotation trigger acts as a ceiling; empty string disables size limit
+  # Value is rendered into logrotate 'maxsize' directive (does not invalidate time-based retention)
+  # Valid values: empty string or size string e.g. "100M", "500k", "1G"
   rotate_size: "100M"
+  # Enable compression of rotated log files using gzip
+  # Valid values: true, false
   compress: true
+  # Archive directory path for rotated log files (rendered into logrotate 'olddir')
+  # Valid values: absolute directory path string starting with '/'
+  archive_directory_path: "/var/log/loki"
+  # Enable date extension suffix for rotated log filenames
+  # Valid values: true, false
+  dateext: true
+  # Date format pattern appended to rotated log filenames when dateext is enabled
+  # Valid values: strftime-compatible format string e.g. "-%Y%m%d"
+  dateformat: "-%Y%m%d"
 
 # -----------------------------------------------------------------------------
 # 14. Extra Configuration

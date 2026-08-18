@@ -18,6 +18,16 @@
     - Loki | handlers | Restart rsyslog
   when: loki_configure_rsyslog | bool
 
+- name: Loki | logging | Create archive log directory
+  become: "{{ loki_become | bool }}"
+  ansible.builtin.file:
+    path: "{{ loki_logrotate_options.archive_directory_path }}"
+    state: directory
+    owner: "root"
+    group: "root"
+    mode: "0755"
+  when: loki_configure_logrotate | bool
+
 - name: Loki | logging | Configure logrotate configuration
   become: "{{ loki_become | bool }}"
   ansible.builtin.template:

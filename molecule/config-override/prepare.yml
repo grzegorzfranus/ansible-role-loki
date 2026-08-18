@@ -23,3 +23,9 @@
         echo "account sufficient pam_permit.so" >> /etc/pam.d/sudo 2>/dev/null || true
       failed_when: false
       changed_when: false
+
+    - name: Loki | molecule | prepare | Install logrotate package
+      ansible.builtin.package:
+        name: logrotate
+        state: present
+      changed_when: false

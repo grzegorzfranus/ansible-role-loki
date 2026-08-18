@@ -2,13 +2,24 @@
 {{ ansible_managed | comment }}
 /var/log/loki/*.log {
     {{ loki_logrotate_options.frequency | default('daily') }}
-    rotate {{ loki_logrotate_options.count | default(7) }}
-    size {{ loki_logrotate_options.rotate_size | default('100M') }}
+    rotate {{ loki_logrotate_options.count | default(14) }}
+{% if loki_logrotate_options.rotate_size is defined and loki_logrotate_options.rotate_size | length > 0 %}
+    maxsize {{ loki_logrotate_options.rotate_size }}
+{% endif %}
     missingok
     notifempty
 {% if loki_logrotate_options.compress | default(true) | bool %}
     compress
     delaycompress
+{% endif %}
+{% if loki_logrotate_options.dateext | default(true) | bool %}
+    dateext
+{% endif %}
+{% if (loki_logrotate_options.dateext | default(true) | bool) and (loki_logrotate_options.dateformat is defined and loki_logrotate_options.dateformat | length > 0) %}
+    dateformat {{ loki_logrotate_options.dateformat }}
+{% endif %}
+{% if loki_logrotate_options.archive_directory_path is defined and loki_logrotate_options.archive_directory_path | length > 0 %}
+    olddir {{ loki_logrotate_options.archive_directory_path }}
 {% endif %}
     sharedscripts
     postrotate

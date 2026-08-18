@@ -31,6 +31,15 @@
         loki_retention_period: "72h"
         loki_ingestion_rate_mb: 8
         loki_ingestion_burst_size_mb: 16
+        loki_configure_logrotate: true
+        loki_logrotate_options:
+          frequency: "daily"
+          count: 14
+          rotate_size: "100M"
+          compress: true
+          archive_directory_path: "/var/log/archive/loki"
+          dateext: true
+          dateformat: "-%Y%m%d"
         loki_extra_config:
           table_manager:
             retention_deletes_enabled: true

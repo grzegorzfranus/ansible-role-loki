@@ -246,8 +246,18 @@ loki_ingestion_burst_size_mb: 6
 |----------|-------------|---------|
 | `loki_configure_rsyslog` | Enable rsyslog file redirection | `false` |
 | `loki_configure_logrotate` | Enable logrotate configuration | `false` |
-| `loki_logrotate_options` | Logrotate parameters dictionary (`frequency`, `count`, etc.) | *See defaults/main.yml* |
+| `loki_logrotate_options.frequency` | Log rotation frequency interval (`hourly`, `daily`, `weekly`, `monthly`) | `"daily"` |
+| `loki_logrotate_options.count` | Number of rotated log files to retain before removing | `14` |
+| `loki_logrotate_options.rotate_size` | Maximum file size ceiling before rotation (`maxsize`); empty string disables size limit | `"100M"` |
+| `loki_logrotate_options.compress` | Enable gzip compression of rotated log files | `true` |
+| `loki_logrotate_options.archive_directory_path` | Dedicated archive directory path for rotated log files (`olddir`) | `"/var/log/loki"` |
+| `loki_logrotate_options.dateext` | Enable date extension suffix for rotated log filenames | `true` |
+| `loki_logrotate_options.dateformat` | Date extension format pattern appended to rotated filenames | `"-%Y%m%d"` |
 | `loki_extra_config` | Raw dictionary deep-merged into rendered `loki-config.yml` | `{}` |
+
+> [!NOTE]
+> **Logrotate `size` vs `maxsize` & Retention Behavior**:
+> In `logrotate`, the `size` directive overrides time-based rotation intervals (`daily`, `weekly`), causing log files to rotate *only* when the size threshold is crossed without any guarantee of daily retention. This role uses `maxsize` instead, ensuring that time-based retention (daily rotation) is strictly honored as the primary trigger while `rotate_size` acts as a safeguard ceiling to prevent log files from growing excessively large within a single interval. Setting `rotate_size: ""` removes the size ceiling entirely.
 
 ### System Validation Parameters
 
