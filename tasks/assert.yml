@@ -226,8 +226,21 @@
       - loki_logrotate_options.count is defined
       - loki_logrotate_options.count is integer
       - loki_logrotate_options.count >= 1
-    fail_msg: "Invalid logrotate_options: frequency must be hourly/daily/weekly/monthly, count >= 1"
-    success_msg: "Logrotate detailed options validated: frequency={{ loki_logrotate_options.frequency }}, count={{ loki_logrotate_options.count }}"
+      - loki_logrotate_options.archive_directory_path is defined
+      - loki_logrotate_options.archive_directory_path is string
+      - loki_logrotate_options.archive_directory_path == '' or loki_logrotate_options.archive_directory_path is match('^/')
+      - loki_logrotate_options.dateext is defined
+      - loki_logrotate_options.dateext is boolean
+      - not (loki_logrotate_options.dateext | bool) or (loki_logrotate_options.dateformat is defined and loki_logrotate_options.dateformat is string and loki_logrotate_options.dateformat | length > 0)
+      - loki_logrotate_options.rotate_size is defined
+      - loki_logrotate_options.rotate_size is string
+      - loki_logrotate_options.rotate_size == '' or loki_logrotate_options.rotate_size is match('^[0-9]+[kKmMgG]?$')
+    fail_msg: >-
+      Invalid logrotate_options: frequency must be hourly/daily/weekly/monthly, count >= 1,
+      archive_directory_path must be empty string or an absolute path starting with '/',
+      dateext must be boolean, dateformat must be non-empty string when dateext is true,
+      and rotate_size must be empty string or match '^[0-9]+[kKmMgG]?$'
+    success_msg: "Logrotate detailed options validated successfully"
   when: loki_configure_logrotate | bool
 
 - name: Loki | assert | Validate extra config dictionary structure

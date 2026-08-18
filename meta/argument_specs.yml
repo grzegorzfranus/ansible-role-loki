@@ -291,18 +291,34 @@ argument_specs:
         type: dict
         options:
           frequency:
+            description: "Log rotation frequency interval"
             type: str
             choices: [hourly, daily, weekly, monthly]
             default: "daily"
           count:
+            description: "Number of rotated log files to retain before removing"
             type: int
-            default: 7
+            default: 14
           rotate_size:
+            description: "Maximum file size before rotation trigger acts as a ceiling; empty string disables size limit"
             type: str
             default: "100M"
           compress:
+            description: "Enable gzip compression for rotated log files"
             type: bool
             default: true
+          archive_directory_path:
+            description: "Archive directory path for rotated log files (logrotate olddir; empty string disables olddir)"
+            type: str
+            default: ""
+          dateext:
+            description: "Enable date extension suffix for rotated log files"
+            type: bool
+            default: true
+          dateformat:
+            description: "Date format pattern appended to rotated log filenames when dateext is enabled (timestamp prevents maxsize collision)"
+            type: str
+            default: "-%Y%m%d%H%M%S"
 
       # 14. Extra Configuration
       loki_extra_config:

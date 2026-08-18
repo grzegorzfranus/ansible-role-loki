@@ -246,8 +246,20 @@ loki_ingestion_burst_size_mb: 6
 |----------|-------------|---------|
 | `loki_configure_rsyslog` | Enable rsyslog file redirection | `false` |
 | `loki_configure_logrotate` | Enable logrotate configuration | `false` |
-| `loki_logrotate_options` | Logrotate parameters dictionary (`frequency`, `count`, etc.) | *See defaults/main.yml* |
+| `loki_logrotate_options.frequency` | Log rotation frequency interval (`hourly`, `daily`, `weekly`, `monthly`) | `"daily"` |
+| `loki_logrotate_options.count` | Number of rotated log files to retain before removing | `14` |
+| `loki_logrotate_options.rotate_size` | Maximum file size ceiling before rotation (`maxsize`); empty string disables size limit | `"100M"` |
+| `loki_logrotate_options.compress` | Enable gzip compression of rotated log files | `true` |
+| `loki_logrotate_options.archive_directory_path` | Dedicated archive directory path for rotated log files (`olddir`; empty string disables `olddir`) | `""` |
+| `loki_logrotate_options.dateext` | Enable date extension suffix for rotated log filenames | `true` |
+| `loki_logrotate_options.dateformat` | Date extension format pattern appended to rotated filenames (`%H%M%S` prevents same-day collisions) | `"-%Y%m%d%H%M%S"` |
 | `loki_extra_config` | Raw dictionary deep-merged into rendered `loki-config.yml` | `{}` |
+
+> [!NOTE]
+> **Logrotate `size` vs `maxsize`, Date Collisions & Archive Paths**:
+> - **Time-Based Retention with `maxsize`**: In `logrotate`, the `size` directive overrides time-based rotation intervals (`daily`, `weekly`), causing log files to rotate *only* when the size threshold is crossed. This role uses `maxsize` instead, guaranteeing that daily rotation occurs while `rotate_size` acts as a safety ceiling for high log volume. Setting `rotate_size: ""` removes the size ceiling.
+> - **Timestamped Suffix (`-%Y%m%d%H%M%S`)**: Because `maxsize` may trigger multiple rotations on the same calendar day, a date-only format (`-%Y%m%d`) causes filename collisions where logrotate skips subsequent rotations (`destination already exists, skipping rotation`). The default format includes time (`%H%M%S`), ensuring uniqueness while keeping date-first ordering for easy sorting.
+> - **Archive Directory (`olddir`)**: Default `archive_directory_path: ""` leaves rotated archives alongside the live log file without emitting `olddir` and avoids modifying ownership on the live log directory (`/var/log/loki`). When explicitly set (e.g. `"/var/log/archive/loki"`), the role automatically ensures the target archive directory exists with `0755` permissions.
 
 ### System Validation Parameters
 
