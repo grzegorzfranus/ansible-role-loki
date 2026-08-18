@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/grzegorzfranus/ansible-role-loki/compare/v0.2.1...v0.3.0) (2026-08-18)
+
+
+### Features
+
+* **logrotate:** add archive directory, date suffix and time-based retention ([#8](https://github.com/grzegorzfranus/ansible-role-loki/issues/8)) ([a954496](https://github.com/grzegorzfranus/ansible-role-loki/commit/a9544964cb81f8a55dbcda1483341d89245929c0))
+
 ## [0.2.1](https://github.com/grzegorzfranus/ansible-role-loki/compare/v0.2.0...v0.2.1) (2026-08-04)
 
 
