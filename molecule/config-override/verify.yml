@@ -56,7 +56,7 @@
           - "'olddir /var/log/archive/loki' in __ver_logrotate_content"
           - "'maxsize 100M' in __ver_logrotate_content"
           - "'dateext' in __ver_logrotate_content"
-          - "'dateformat -%Y%m%d' in __ver_logrotate_content"
+          - "'dateformat -%Y%m%d%H%M%S' in __ver_logrotate_content"
           - "not (__ver_logrotate_content is regex('(?m)^\\s*size\\s+'))"
         fail_msg: "Logrotate directives validation failed (missing olddir/maxsize/dateformat or invalid size directive present)"
         success_msg: "Logrotate directives verified successfully (olddir, maxsize, dateformat present, size directive absent)"

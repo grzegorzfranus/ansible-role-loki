@@ -308,17 +308,17 @@ argument_specs:
             type: bool
             default: true
           archive_directory_path:
-            description: "Archive directory path for rotated log files (logrotate olddir)"
+            description: "Archive directory path for rotated log files (logrotate olddir; empty string disables olddir)"
             type: str
-            default: "/var/log/loki"
+            default: ""
           dateext:
             description: "Enable date extension suffix for rotated log files"
             type: bool
             default: true
           dateformat:
-            description: "Date format pattern appended to rotated log filenames when dateext is enabled"
+            description: "Date format pattern appended to rotated log filenames when dateext is enabled (timestamp prevents maxsize collision)"
             type: str
-            default: "-%Y%m%d"
+            default: "-%Y%m%d%H%M%S"
 
       # 14. Extra Configuration
       loki_extra_config:

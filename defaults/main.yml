@@ -281,14 +281,16 @@ loki_logrotate_options:
   # Valid values: true, false
   compress: true
   # Archive directory path for rotated log files (rendered into logrotate 'olddir')
-  # Valid values: absolute directory path string starting with '/'
-  archive_directory_path: "/var/log/loki"
+  # Empty string disables olddir (archives stay in log directory without changing its ownership)
+  # Valid values: empty string or absolute directory path string starting with '/'
+  archive_directory_path: ""
   # Enable date extension suffix for rotated log filenames
   # Valid values: true, false
   dateext: true
   # Date format pattern appended to rotated log filenames when dateext is enabled
-  # Valid values: strftime-compatible format string e.g. "-%Y%m%d"
-  dateformat: "-%Y%m%d"
+  # Uses timestamp suffix (%H%M%S) to prevent same-day filename collisions on maxsize triggers
+  # Valid values: strftime-compatible format string e.g. "-%Y%m%d%H%M%S"
+  dateformat: "-%Y%m%d%H%M%S"
 
 # -----------------------------------------------------------------------------
 # 14. Extra Configuration

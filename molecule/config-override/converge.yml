@@ -39,7 +39,7 @@
           compress: true
           archive_directory_path: "/var/log/archive/loki"
           dateext: true
-          dateformat: "-%Y%m%d"
+          dateformat: "-%Y%m%d%H%M%S"
         loki_extra_config:
           table_manager:
             retention_deletes_enabled: true
