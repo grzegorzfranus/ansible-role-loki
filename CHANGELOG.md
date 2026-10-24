@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.2](https://github.com/grzegorzfranus/ansible-role-loki/compare/v0.4.1...v0.4.2) (2026-10-24)
+
+
+### Documentation
+
+* **readme:** describe the current CI and release pipelines ([#17](https://github.com/grzegorzfranus/ansible-role-loki/issues/17)) ([#18](https://github.com/grzegorzfranus/ansible-role-loki/issues/18)) ([25755de](https://github.com/grzegorzfranus/ansible-role-loki/commit/25755dec95b84f765035d72eb0cc5667b778677b))
+
 ## [0.4.1](https://github.com/grzegorzfranus/ansible-role-loki/compare/v0.4.0...v0.4.1) (2026-10-24)
 
 
