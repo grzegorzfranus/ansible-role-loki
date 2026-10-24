@@ -5,7 +5,7 @@ argument_specs:
     description:
       - "Installs and configures Grafana Loki in single-binary mode with local TSDB storage."
       - "Supports Docker Compose and native binary + systemd deployment modes."
-      - "Supports Ubuntu 22.04/24.04/26.04, Debian 11/12/13, and EL9 (Rocky Linux 9, RHEL 9, AlmaLinux 9)."
+      - "Supports Ubuntu 22.04/24.04/26.04, Debian 12/13, and EL9 (Rocky Linux 9, RHEL 9, AlmaLinux 9)."
     author: "Grzegorz Franus"
 
     options:

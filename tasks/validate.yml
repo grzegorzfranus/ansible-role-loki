@@ -13,10 +13,10 @@
         (ansible_facts['distribution'] == 'Ubuntu' and
          ansible_facts['distribution_version'] in ['22.04', '24.04', '26.04']) or
         (ansible_facts['distribution'] == 'Debian' and
-         ansible_facts['distribution_major_version'] in ['11', '12', '13']) or
+         ansible_facts['distribution_major_version'] in ['12', '13']) or
         (ansible_facts['os_family'] == 'RedHat' and
          ansible_facts['distribution_major_version'] == '9')
-    fail_msg: "Unsupported OS: {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}. Supported: Ubuntu 22.04/24.04/26.04, Debian 11/12/13, EL9"
+    fail_msg: "Unsupported OS: {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}. Supported: Ubuntu 22.04/24.04/26.04, Debian 12/13, EL9"
     success_msg: "Distribution supported: {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}"
 
 - name: Loki | validate | Check total system memory availability

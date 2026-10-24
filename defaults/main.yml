@@ -7,7 +7,7 @@
 #
 # Supported OS distributions:
 # - Ubuntu 26.04 (Resolute), 24.04 (Noble), 22.04 (Jammy)
-# - Debian 13 (Trixie), 12 (Bookworm), 11 (Bullseye)
+# - Debian 13 (Trixie), 12 (Bookworm)
 # - EL9: Rocky Linux 9, RHEL 9, AlmaLinux 9
 #
 # Sections:

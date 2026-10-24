@@ -45,8 +45,9 @@ Agents (Alloy/Vector) ──[HTTP 3100 / Push]──> Grafana Loki (Single Binar
 | Ubuntu | 22.04 (Jammy) | ![✓](https://img.shields.io/badge/✓-brightgreen.svg) |
 | Debian | 13 (Trixie) | ![✓](https://img.shields.io/badge/✓-brightgreen.svg) |
 | Debian | 12 (Bookworm) | ![✓](https://img.shields.io/badge/✓-brightgreen.svg) |
-| Debian | 11 (Bullseye) | ![✓](https://img.shields.io/badge/✓-brightgreen.svg) |
 | EL (RHEL, Rocky, Alma, Oracle) | 9 | ![✓](https://img.shields.io/badge/✓-brightgreen.svg) |
+
+> **Note**: Debian 11 (Bullseye) is not supported since its LTS ended on 2026-08-31 — its packages are moving to archive.debian.org, so dependencies can no longer be reliably installed from default sources. Use Debian 12 or newer.
 
 ### Ansible Version
 
@@ -433,7 +434,6 @@ ansible-role-loki/
 │   └── systemd/
 │       └── loki.service.j2            # Systemd service unit template
 ├── vars/
-│   ├── debian_11.yml                  # Debian 11 specific variables
 │   ├── debian_12.yml                  # Debian 12 specific variables
 │   ├── debian_13.yml                  # Debian 13 specific variables
 │   ├── redhat_9.yml                   # Enterprise Linux 9 specific variables
