@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.4.0](https://github.com/grzegorzfranus/ansible-role-loki/compare/v0.3.0...v0.4.0) (2026-10-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* **platforms:** drop Debian 11 (Bullseye) support ([#11](https://github.com/grzegorzfranus/ansible-role-loki/issues/11)) (#12)
+
+### Features
+
+* **platforms:** drop Debian 11 (Bullseye) support ([#11](https://github.com/grzegorzfranus/ansible-role-loki/issues/11)) ([#12](https://github.com/grzegorzfranus/ansible-role-loki/issues/12)) ([1265183](https://github.com/grzegorzfranus/ansible-role-loki/commit/126518339199cfb2f75b24de86bcca273406ad0a))
+
 ## [0.3.0](https://github.com/grzegorzfranus/ansible-role-loki/compare/v0.2.1...v0.3.0) (2026-08-18)
 
 
