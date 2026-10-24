@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/grzegorzfranus/ansible-role-loki/compare/v0.4.0...v0.4.1) (2026-10-24)
+
+
+### CI/CD
+
+* **workflows:** align Dependabot, release and CI workflows with github-workflows ([#14](https://github.com/grzegorzfranus/ansible-role-loki/issues/14)) ([#15](https://github.com/grzegorzfranus/ansible-role-loki/issues/15)) ([f78229b](https://github.com/grzegorzfranus/ansible-role-loki/commit/f78229b8971357634fae7902e5990c39b9a4a396))
+
 ## [0.4.0](https://github.com/grzegorzfranus/ansible-role-loki/compare/v0.3.0...v0.4.0) (2026-10-24)
 
 
